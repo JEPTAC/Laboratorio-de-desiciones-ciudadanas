@@ -27,6 +27,7 @@ const modalCode = document.querySelector('#codigo-modal');
 const modalTitle = document.querySelector('#titulo-modal');
 const modalContent = document.querySelector('#contenido-modal');
 const closeModalButton = document.querySelector('#cerrar-modal');
+const semaforoButtons = [...document.querySelectorAll('[data-semaforo-status]')];
 
 let decisions = [];
 let filteredDecisions = [];
@@ -71,6 +72,42 @@ function statusClass(status) {
   return map[status] || 'analisis';
 }
 
+function statusDescription(status) {
+  const map = {
+    'En análisis': 'La decisión se encuentra en estudio.',
+    'Adoptada': 'La decisión fue aprobada y está pendiente de ejecución.',
+    'En ejecución': 'Las acciones comprometidas están en desarrollo.',
+    'Cumplida': 'La decisión alcanzó el resultado reportado.',
+    'No adoptada': 'La propuesta no fue acogida y cuenta con una justificación.',
+    'Suspendida': 'La ejecución está detenida y debe informar su causa.'
+  };
+  return map[status] || 'Estado de la decisión.';
+}
+
+function syncSemaforoSelection() {
+  semaforoButtons.forEach((button) => {
+    button.setAttribute('aria-pressed', String(button.dataset.semaforoStatus === statusFilter.value));
+  });
+}
+
+function updateSemaforo() {
+  const counts = {
+    'En análisis': decisions.filter((item) => item.estadoDecision === 'En análisis').length,
+    'Adoptada': decisions.filter((item) => item.estadoDecision === 'Adoptada').length,
+    'En ejecución': decisions.filter((item) => item.estadoDecision === 'En ejecución').length,
+    'Cumplida': decisions.filter((item) => item.estadoDecision === 'Cumplida').length,
+    'No adoptada': decisions.filter((item) => item.estadoDecision === 'No adoptada').length,
+    'Suspendida': decisions.filter((item) => item.estadoDecision === 'Suspendida').length
+  };
+  setText('#semaforo-analisis', counts['En análisis'].toLocaleString('es-CO'));
+  setText('#semaforo-adoptada', counts.Adoptada.toLocaleString('es-CO'));
+  setText('#semaforo-ejecucion', counts['En ejecución'].toLocaleString('es-CO'));
+  setText('#semaforo-cumplida', counts.Cumplida.toLocaleString('es-CO'));
+  setText('#semaforo-no-adoptada', counts['No adoptada'].toLocaleString('es-CO'));
+  setText('#semaforo-suspendida', counts.Suspendida.toLocaleString('es-CO'));
+  syncSemaforoSelection();
+}
+
 function safeUrl(value) {
   try {
     const url = new URL(value);
@@ -109,18 +146,24 @@ function updateKpis() {
   setText('#kpi-cumplidas', decisions.filter((item) => item.estadoDecision === 'Cumplida').length.toLocaleString('es-CO'));
   const withIncorporation = decisions.filter((item) => ['Incorporación total', 'Incorporación parcial'].includes(item.nivelIncorporacion)).length;
   setText('#kpi-incorporacion', decisions.length ? `${Math.round((withIncorporation / decisions.length) * 100)}%` : '—');
+  updateSemaforo();
 }
 
 function createBadge(status) {
   const badge = document.createElement('span');
   badge.className = `badge ${statusClass(status)}`;
-  badge.textContent = status || 'En análisis';
+  const currentStatus = status || 'En análisis';
+  badge.textContent = currentStatus;
+  badge.title = statusDescription(currentStatus);
+  badge.setAttribute('aria-label', `Estado: ${currentStatus}. ${statusDescription(currentStatus)}`);
   return badge;
 }
 
 function createDecisionCard(item) {
   const article = document.createElement('article');
-  article.className = `decision-card${item.destacado ? ' featured' : ''}`;
+  const currentStatus = item.estadoDecision || 'En análisis';
+  const currentStatusClass = statusClass(currentStatus);
+  article.className = `decision-card status-${currentStatusClass}${item.destacado ? ' featured' : ''}`;
 
   const top = document.createElement('div');
   top.className = 'decision-top';
@@ -131,7 +174,13 @@ function createDecisionCard(item) {
   const title = document.createElement('h3');
   title.textContent = item.titulo || 'Decisión sin título';
   headingWrap.append(code, title);
-  top.append(headingWrap, createBadge(item.estadoDecision));
+  const statusStack = document.createElement('div');
+  statusStack.className = 'status-stack';
+  const statusCaption = document.createElement('span');
+  statusCaption.className = 'status-caption';
+  statusCaption.textContent = 'Estado semáforo';
+  statusStack.append(statusCaption, createBadge(currentStatus));
+  top.append(headingWrap, statusStack);
 
   const body = document.createElement('div');
   body.className = 'decision-body';
@@ -161,7 +210,12 @@ function createDecisionCard(item) {
   const progress = Math.max(0, Math.min(100, Number(item.porcentajeAvance) || 0));
   progressLabel.innerHTML = `<span>Avance reportado</span><span>${progress}%</span>`;
   const progressBar = document.createElement('div');
-  progressBar.className = 'progress';
+  progressBar.className = `progress ${currentStatusClass}`;
+  progressBar.setAttribute('role', 'progressbar');
+  progressBar.setAttribute('aria-label', `Avance de la decisión ${item.codigo || item.id}`);
+  progressBar.setAttribute('aria-valuemin', '0');
+  progressBar.setAttribute('aria-valuemax', '100');
+  progressBar.setAttribute('aria-valuenow', String(progress));
   const progressFill = document.createElement('span');
   progressFill.style.width = `${progress}%`;
   progressBar.appendChild(progressFill);
@@ -209,6 +263,7 @@ function applyDecisionFilters() {
       && (!territory || item.territorio === territory);
   });
   renderDecisions();
+  syncSemaforoSelection();
 }
 
 function addDetailBox(container, title, value, full = false) {
@@ -272,7 +327,12 @@ function openDecision(item) {
   progressLabel.className = 'progress-label';
   progressLabel.innerHTML = `<span>Avance reportado</span><span>${progress}%</span>`;
   const progressBar = document.createElement('div');
-  progressBar.className = 'progress';
+  progressBar.className = `progress ${statusClass(item.estadoDecision)}`;
+  progressBar.setAttribute('role', 'progressbar');
+  progressBar.setAttribute('aria-label', `Avance de la decisión ${item.codigo || item.id}`);
+  progressBar.setAttribute('aria-valuemin', '0');
+  progressBar.setAttribute('aria-valuemax', '100');
+  progressBar.setAttribute('aria-valuenow', String(progress));
   const fill = document.createElement('span');
   fill.style.width = `${progress}%`;
   progressBar.appendChild(fill);
@@ -450,6 +510,15 @@ async function loadContributions() {
     updateKpis();
   }
 }
+
+semaforoButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const requestedStatus = button.dataset.semaforoStatus || '';
+    statusFilter.value = statusFilter.value === requestedStatus ? '' : requestedStatus;
+    applyDecisionFilters();
+    document.querySelector('#lista-decisiones')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
 
 [searchInput, yearFilter, statusFilter, topicFilter, territoryFilter].forEach((element) => {
   element.addEventListener(element.tagName === 'INPUT' ? 'input' : 'change', applyDecisionFilters);

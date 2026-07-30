@@ -38,3 +38,8 @@ Campos mínimos:
 `participacionDecisiones`
 
 La ciudadanía solo puede consultar registros con `estadoPublicacion: "publicado"`. La creación, edición y eliminación están reservadas al superadministrador.
+
+
+## Semáforo público de decisiones
+
+La portada presenta contadores y filtros visuales para En análisis, Adoptada, En ejecución, Cumplida, No adoptada y Suspendida. Cada tarjeta publica el estado por texto y color, porcentaje de avance, fecha de actualización y acceso al detalle y las evidencias.

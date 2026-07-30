@@ -89,6 +89,25 @@ let decisions = [];
 let filteredDecisions = [];
 let contributions = [];
 
+function statusClass(status) {
+  const map = {
+    'En análisis': 'analisis',
+    'Adoptada': 'adoptada',
+    'En ejecución': 'ejecucion',
+    'Cumplida': 'cumplida',
+    'No adoptada': 'no-adoptada',
+    'Suspendida': 'suspendida'
+  };
+  return map[status] || 'analisis';
+}
+
+function createStatusBadge(status) {
+  const badge = document.createElement('span');
+  badge.className = `badge ${statusClass(status)}`;
+  badge.textContent = status || 'En análisis';
+  return badge;
+}
+
 function normalizeRole(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -340,8 +359,27 @@ function renderDecisionTable() {
     small.style.color = '#667085';
     small.style.marginTop = '4px';
     titleCell.appendChild(small);
-    createTextCell(row, item.estadoDecision);
-    createTextCell(row, `${Number(item.porcentajeAvance || 0)}%`);
+    const statusCell = document.createElement('td');
+    statusCell.appendChild(createStatusBadge(item.estadoDecision));
+    row.appendChild(statusCell);
+
+    const progressCell = document.createElement('td');
+    const progressValue = Math.max(0, Math.min(100, Number(item.porcentajeAvance || 0)));
+    const progressWrapper = document.createElement('div');
+    progressWrapper.className = 'table-progress';
+    const progressBar = document.createElement('span');
+    progressBar.className = `table-progress-bar ${statusClass(item.estadoDecision)}`;
+    progressBar.setAttribute('role', 'progressbar');
+    progressBar.setAttribute('aria-valuemin', '0');
+    progressBar.setAttribute('aria-valuemax', '100');
+    progressBar.setAttribute('aria-valuenow', String(progressValue));
+    const progressFill = document.createElement('span');
+    progressFill.style.width = `${progressValue}%`;
+    progressBar.appendChild(progressFill);
+    progressWrapper.append(progressBar, document.createTextNode(`${progressValue}%`));
+    progressCell.appendChild(progressWrapper);
+    row.appendChild(progressCell);
+
     createTextCell(row, item.estadoPublicacion === 'publicado' ? 'Publicada' : 'Borrador');
 
     const completenessCell = document.createElement('td');

@@ -83,6 +83,48 @@
         </div>
       </div>
 
+      <section class="semaforo-panel" aria-labelledby="titulo-semaforo">
+        <div class="semaforo-heading">
+          <div>
+            <span class="section-kicker">Estado general</span>
+            <h3 id="titulo-semaforo">Semáforo de decisiones</h3>
+          </div>
+          <p>Seleccione un estado para filtrar el tablero. Cada color está acompañado por su nombre y cantidad de decisiones.</p>
+        </div>
+        <div class="semaforo-grid" role="group" aria-label="Filtrar decisiones por estado">
+          <button class="semaforo-item analisis" type="button" data-semaforo-status="En análisis" aria-pressed="false">
+            <span class="semaforo-light" aria-hidden="true"></span>
+            <span class="semaforo-copy"><strong>En análisis</strong><small>La entidad estudia los aportes y su viabilidad.</small></span>
+            <span class="semaforo-count" id="semaforo-analisis">0</span>
+          </button>
+          <button class="semaforo-item adoptada" type="button" data-semaforo-status="Adoptada" aria-pressed="false">
+            <span class="semaforo-light" aria-hidden="true"></span>
+            <span class="semaforo-copy"><strong>Adoptada</strong><small>La decisión fue aprobada y está pendiente de ejecución.</small></span>
+            <span class="semaforo-count" id="semaforo-adoptada">0</span>
+          </button>
+          <button class="semaforo-item ejecucion" type="button" data-semaforo-status="En ejecución" aria-pressed="false">
+            <span class="semaforo-light" aria-hidden="true"></span>
+            <span class="semaforo-copy"><strong>En ejecución</strong><small>Las acciones o compromisos se encuentran en desarrollo.</small></span>
+            <span class="semaforo-count" id="semaforo-ejecucion">0</span>
+          </button>
+          <button class="semaforo-item cumplida" type="button" data-semaforo-status="Cumplida" aria-pressed="false">
+            <span class="semaforo-light" aria-hidden="true"></span>
+            <span class="semaforo-copy"><strong>Cumplida</strong><small>La acción comprometida fue finalizada y cuenta con resultado.</small></span>
+            <span class="semaforo-count" id="semaforo-cumplida">0</span>
+          </button>
+          <button class="semaforo-item no-adoptada" type="button" data-semaforo-status="No adoptada" aria-pressed="false">
+            <span class="semaforo-light" aria-hidden="true"></span>
+            <span class="semaforo-copy"><strong>No adoptada</strong><small>La propuesta no fue acogida y debe publicar su justificación.</small></span>
+            <span class="semaforo-count" id="semaforo-no-adoptada">0</span>
+          </button>
+          <button class="semaforo-item suspendida" type="button" data-semaforo-status="Suspendida" aria-pressed="false">
+            <span class="semaforo-light" aria-hidden="true"></span>
+            <span class="semaforo-copy"><strong>Suspendida</strong><small>El seguimiento está detenido y debe informar la causa.</small></span>
+            <span class="semaforo-count" id="semaforo-suspendida">0</span>
+          </button>
+        </div>
+      </section>
+
       <section class="panel filter-panel" aria-label="Filtros de decisiones">
         <div class="field search-field"><label for="buscar-decision">Buscar</label><input id="buscar-decision" type="search" placeholder="Tema, código, decisión, territorio o dependencia"></div>
         <div class="field"><label for="filtro-vigencia">Vigencia</label><select id="filtro-vigencia"><option value="">Todas</option></select></div>
