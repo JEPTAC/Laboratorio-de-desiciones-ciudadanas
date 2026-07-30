@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Laboratorio de Ideas Ciudadanas de San Pedro, Valle del Cauca. Consulte aportes, decisiones públicas, fundamentos, compromisos, avances y evidencias.">
+  <meta name="theme-color" content="#01256a">
+  <title>Laboratorio de Ideas Ciudadanas | San Pedro, Valle del Cauca</title>
+  <link rel="icon" href="assets/img/escudo-san-pedro.jpg" type="image/jpeg">
+  <link rel="stylesheet" href="assets/css/estilos.css">
+</head>
+<body>
+<a class="skip-link" href="#contenido">Saltar al contenido principal</a>
+<header class="site-header">
+  <div class="container topbar">
+    <a class="brand" href="index.html" aria-label="Ir al inicio del Laboratorio de Ideas Ciudadanas">
+      <img src="assets/img/escudo-san-pedro.jpg" alt="Escudo del municipio de San Pedro, Valle del Cauca">
+      <span>San Pedro Participa<small>Laboratorio de Ideas Ciudadanas</small></span>
+    </a>
+    <nav class="nav" aria-label="Navegación principal">
+      <a href="#decisiones">Decisiones</a>
+      <a href="#aportes">Aportes</a>
+      <a href="#ruta">Cómo funciona</a>
+      <a href="#marco">Información de referencia</a>
+      <a class="login-link" href="administracion.html">Iniciar sesión</a>
+    </nav>
+  </div>
+  <div class="container hero">
+    <div>
+      <span class="eyebrow">Menú Participa · Seguimiento público</span>
+      <h1>De las ideas ciudadanas a las decisiones públicas</h1>
+      <p>Consulte cómo los aportes de la comunidad son analizados, qué decisiones adopta la Alcaldía, cuáles son sus fundamentos y cómo avanza cada compromiso.</p>
+      <div class="hero-actions">
+        <a class="btn primary-light" href="#decisiones">Consultar decisiones</a>
+        <a class="btn ghost-light" href="#aportes">Ver aportes ciudadanos</a>
+      </div>
+    </div>
+    <aside class="hero-card" aria-label="Información que encontrará en el laboratorio">
+      <h2>Información disponible</h2>
+      <ol>
+        <li>Aportes y necesidades planteadas por la ciudadanía.</li>
+        <li>Decisiones adoptadas y nivel de incorporación de los aportes.</li>
+        <li>Fundamentos técnicos, jurídicos y presupuestales.</li>
+        <li>Responsables, plazos, avances, resultados y evidencias.</li>
+        <li>Histórico por vigencia y descarga de datos.</li>
+      </ol>
+    </aside>
+  </div>
+</header>
+
+<main id="contenido">
+  <div class="container kpi-grid" aria-label="Indicadores públicos">
+    <article class="kpi"><strong id="kpi-aportes">—</strong><span>Aportes ciudadanos publicados</span></article>
+    <article class="kpi"><strong id="kpi-decisiones">—</strong><span>Decisiones publicadas</span></article>
+    <article class="kpi"><strong id="kpi-ejecucion">—</strong><span>Decisiones en ejecución</span></article>
+    <article class="kpi"><strong id="kpi-cumplidas">—</strong><span>Decisiones cumplidas</span></article>
+    <article class="kpi"><strong id="kpi-incorporacion">—</strong><span>Aportes incorporados total o parcialmente</span></article>
+  </div>
+
+  <section class="section" id="ruta">
+    <div class="container">
+      <div class="section-heading">
+        <div><span class="section-kicker">Ruta de participación</span><h2>Así se transforma una idea en seguimiento público</h2></div>
+        <p>El laboratorio permite reconstruir el proceso completo, desde la expresión ciudadana hasta la decisión institucional y su cumplimiento.</p>
+      </div>
+      <div class="route-grid">
+        <article class="route-card"><div class="route-number">1</div><h3>La comunidad participa</h3><p>Se reciben ideas, preguntas, comentarios, necesidades y propuestas en los espacios habilitados.</p></article>
+        <article class="route-card"><div class="route-number">2</div><h3>La entidad analiza</h3><p>Las dependencias revisan la competencia, viabilidad, impacto, recursos y fundamentos aplicables.</p></article>
+        <article class="route-card"><div class="route-number">3</div><h3>Se publica la decisión</h3><p>Se informa qué fue decidido, por qué, cuáles aportes fueron incorporados y quién responde.</p></article>
+        <article class="route-card"><div class="route-number">4</div><h3>Se hace seguimiento</h3><p>El avance se actualiza mediante estado, porcentaje, fecha, resultados y evidencias verificables.</p></article>
+        <article class="route-card"><div class="route-number">5</div><h3>La ciudadanía verifica</h3><p>La comunidad consulta el histórico, descarga los datos y ejerce control social sobre los compromisos.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt" id="decisiones">
+    <div class="container">
+      <div class="section-heading">
+        <div><span class="section-kicker">Decisiones y seguimiento</span><h2>Tablero público de decisiones</h2></div>
+        <div class="data-actions">
+          <button class="btn secondary" id="descargar-decisiones" type="button" disabled>Descargar CSV</button>
+          <button class="btn secondary" id="imprimir-pagina" type="button">Imprimir</button>
+        </div>
+      </div>
+
+      <section class="panel filter-panel" aria-label="Filtros de decisiones">
+        <div class="field search-field"><label for="buscar-decision">Buscar</label><input id="buscar-decision" type="search" placeholder="Tema, código, decisión, territorio o dependencia"></div>
+        <div class="field"><label for="filtro-vigencia">Vigencia</label><select id="filtro-vigencia"><option value="">Todas</option></select></div>
+        <div class="field"><label for="filtro-estado">Estado</label><select id="filtro-estado"><option value="">Todos</option><option>En análisis</option><option>Adoptada</option><option>En ejecución</option><option>Cumplida</option><option>No adoptada</option><option>Suspendida</option></select></div>
+        <div class="field"><label for="filtro-tema">Tema</label><select id="filtro-tema"><option value="">Todos</option></select></div>
+        <div class="field"><label for="filtro-territorio">Territorio</label><select id="filtro-territorio"><option value="">Todos</option></select></div>
+        <div class="filters-actions"><button class="btn secondary" id="limpiar-filtros" type="button">Limpiar</button></div>
+      </section>
+
+      <div class="results-bar"><p id="conteo-decisiones">Consultando decisiones…</p><p>Seleccione una decisión para conocer sus fundamentos, responsables y evidencias.</p></div>
+      <div class="loading" id="cargando-decisiones">Cargando información pública…</div>
+      <div class="decisions-grid" id="lista-decisiones" aria-live="polite"></div>
+      <div class="empty-state" id="sin-decisiones" hidden><strong>No hay decisiones para mostrar</strong><span>Pruebe cambiando los filtros o consulte nuevamente más adelante.</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="aportes">
+    <div class="container">
+      <div class="section-heading">
+        <div><span class="section-kicker">Participación abierta</span><h2>Banco de aportes ciudadanos</h2></div>
+        <p>Ideas, preguntas y comentarios publicados por la comunidad que pueden servir como insumo para el análisis institucional.</p>
+      </div>
+      <div class="tabs" role="group" aria-label="Filtros de aportes">
+        <button class="tab-button active" type="button" data-tipo-aporte="">Todos</button>
+        <button class="tab-button" type="button" data-tipo-aporte="Idea">Ideas</button>
+        <button class="tab-button" type="button" data-tipo-aporte="Pregunta">Preguntas</button>
+        <button class="tab-button" type="button" data-tipo-aporte="Comentario">Comentarios</button>
+      </div>
+      <div class="loading" id="cargando-aportes">Cargando aportes publicados…</div>
+      <div class="contributions-grid" id="lista-aportes" aria-live="polite"></div>
+      <div class="empty-state" id="sin-aportes" hidden><strong>No hay aportes publicados en esta categoría</strong><span>Los nuevos aportes aparecerán aquí cuando sean registrados.</span></div>
+    </div>
+  </section>
+
+  <section class="section alt" id="marco">
+    <div class="container">
+      <div class="section-heading">
+        <div><span class="section-kicker">Consulta informada</span><h2>Información de referencia</h2></div>
+        <p>Fuentes oficiales relacionadas con transparencia, participación ciudadana, rendición de cuentas y gestión pública.</p>
+      </div>
+      <div class="norm-grid">
+        <article class="norm-card"><h3>Ley 1712 de 2014</h3><p>Transparencia y derecho de acceso a la información pública.</p><a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=56882" target="_blank" rel="noopener">Consultar norma</a></article>
+        <article class="norm-card"><h3>Ley 1757 de 2015</h3><p>Promoción y protección del derecho a la participación democrática.</p><a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=65335" target="_blank" rel="noopener">Consultar norma</a></article>
+        <article class="norm-card"><h3>Resolución 1519 de 2020</h3><p>Estándares de publicación, accesibilidad web, seguridad digital y datos abiertos.</p><a href="https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mintic_1519_2020.htm" target="_blank" rel="noopener">Consultar resolución</a></article>
+        <article class="norm-card"><h3>Menú Participa</h3><p>Orientaciones para vincular a la ciudadanía en el ciclo de la gestión pública.</p><a href="https://www.funcionpublica.gov.co/participa" target="_blank" rel="noopener">Consultar orientación</a></article>
+        <article class="norm-card"><h3>Índice de Transparencia y Acceso a la Información</h3><p>Información oficial sobre la medición ITA y sus instrumentos de cumplimiento.</p><a href="https://www.procuraduria.gov.co/Pages/ita.aspx" target="_blank" rel="noopener">Consultar ITA</a></article>
+        <article class="norm-card"><h3>Modelo Integrado de Planeación y Gestión</h3><p>Marco para promover la participación ciudadana en la planeación, gestión y evaluación pública.</p><a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=83433" target="_blank" rel="noopener">Consultar Decreto 1499 de 2017</a></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div><strong>Alcaldía Municipal de San Pedro</strong><p>Laboratorio de Ideas Ciudadanas para consultar aportes, decisiones, compromisos y resultados de la participación.</p></div>
+    <div><strong>Consulta institucional</strong><p><a href="https://www.sanpedro-valle.gov.co/" target="_blank" rel="noopener">Portal municipal</a></p><p><a href="https://www.sanpedro-valle.gov.co/control-ciudadano/control-ciudadano-631934" target="_blank" rel="noopener">Control ciudadano</a></p></div>
+    <div><strong>Accesibilidad</strong><p>Diseño adaptable a dispositivos móviles, navegación por teclado, etiquetas de formulario y descarga de información.</p></div>
+  </div>
+  <div class="container footer-bottom">San Pedro, Valle del Cauca · Información pública para la participación y el control social.</div>
+</footer>
+
+<div class="modal" id="modal-decision" hidden role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
+  <article class="modal-card">
+    <header class="modal-head">
+      <div><span class="code" id="codigo-modal"></span><h2 id="titulo-modal">Detalle de la decisión</h2></div>
+      <button class="icon-button" id="cerrar-modal" type="button" aria-label="Cerrar detalle">×</button>
+    </header>
+    <div class="modal-content" id="contenido-modal"></div>
+  </article>
+</div>
+
+<script type="module" src="assets/js/publico.js"></script>
+</body>
+</html>
