@@ -691,6 +691,192 @@ service cloud.firestore {
         && d.updatedAt == request.time;
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // COLABORACIÓN E INNOVACIÓN ABIERTA
+    // Creación ciudadana autenticada de aportes, propuestas y votos.
+    // ─────────────────────────────────────────────────────────────
+
+    function publishedInnovationDocument() {
+      return resource.data.get('estadoPublicacion', '') == 'publicado';
+    }
+
+    function validInnovationConsultationCreate() {
+      let d = request.resource.data;
+
+      return signedIn()
+        && d.keys().hasAll([
+          'codigo', 'vigencia', 'problematicaId', 'nombrePublico',
+          'tipoAporte', 'aporte', 'consentimientoPublicacion',
+          'estadoModeracion', 'estadoPublicacion', 'origen',
+          'createdAt', 'updatedAt'
+        ])
+        && d.keys().hasOnly([
+          'codigo', 'vigencia', 'problematicaId', 'nombrePublico',
+          'tipoAporte', 'aporte', 'consentimientoPublicacion',
+          'estadoModeracion', 'estadoPublicacion', 'origen',
+          'createdAt', 'updatedAt'
+        ])
+        && d.codigo is string
+        && d.codigo.matches('^CON-2026-[A-Z0-9]{8}$')
+        && d.vigencia == 2026
+        && d.problematicaId is string
+        && d.problematicaId.size() > 0
+        && exists(/databases/$(database)/documents/innovacionProblematicas/$(d.problematicaId))
+        && get(/databases/$(database)/documents/innovacionProblematicas/$(d.problematicaId)).data.estadoPublicacion == 'publicado'
+        && get(/databases/$(database)/documents/innovacionProblematicas/$(d.problematicaId)).data.estadoProblematica == 'En consulta'
+        && d.nombrePublico is string
+        && d.nombrePublico.size() >= 2
+        && d.nombrePublico.size() <= 80
+        && d.tipoAporte in [
+          'Información o evidencia',
+          'Causa identificada',
+          'Necesidad prioritaria',
+          'Idea inicial',
+          'Pregunta'
+        ]
+        && d.aporte is string
+        && d.aporte.size() >= 3
+        && d.aporte.size() <= 1500
+        && d.consentimientoPublicacion == true
+        && d.estadoModeracion == 'pendiente'
+        && d.estadoPublicacion == 'pendiente'
+        && d.origen == 'san_pedro_innova'
+        && d.createdAt == request.time
+        && d.updatedAt == request.time;
+    }
+
+    function validInnovationProposalCreate() {
+      let d = request.resource.data;
+
+      return signedIn()
+        && d.keys().hasAll([
+          'codigo', 'vigencia', 'retoId', 'retoCodigo', 'titulo',
+          'autorNombre', 'organizacion', 'territorio', 'resumen',
+          'descripcion', 'beneficiarios', 'impactoEsperado', 'recursos',
+          'viabilidad', 'tiempoImplementacion', 'innovacion', 'enlaceAnexo',
+          'autorizacionPublicacion', 'estadoModeracion', 'estadoPublicacion',
+          'seleccionada', 'votosPublicados', 'porcentajeVotacion',
+          'puntajeFinal', 'justificacionSeleccion', 'resultadoCriterios',
+          'fechaSeleccion', 'enlaceActaSeleccion', 'origen',
+          'createdAt', 'updatedAt'
+        ])
+        && d.keys().hasOnly([
+          'codigo', 'vigencia', 'retoId', 'retoCodigo', 'titulo',
+          'autorNombre', 'organizacion', 'territorio', 'resumen',
+          'descripcion', 'beneficiarios', 'impactoEsperado', 'recursos',
+          'viabilidad', 'tiempoImplementacion', 'innovacion', 'enlaceAnexo',
+          'autorizacionPublicacion', 'estadoModeracion', 'estadoPublicacion',
+          'seleccionada', 'votosPublicados', 'porcentajeVotacion',
+          'puntajeFinal', 'justificacionSeleccion', 'resultadoCriterios',
+          'fechaSeleccion', 'enlaceActaSeleccion', 'origen',
+          'createdAt', 'updatedAt'
+        ])
+        && d.codigo is string
+        && d.codigo.matches('^SOL-2026-[A-Z0-9]{8}$')
+        && d.vigencia == 2026
+        && d.retoId is string
+        && d.retoId.size() > 0
+        && exists(/databases/$(database)/documents/innovacionRetos/$(d.retoId))
+        && get(/databases/$(database)/documents/innovacionRetos/$(d.retoId)).data.estadoPublicacion == 'publicado'
+        && get(/databases/$(database)/documents/innovacionRetos/$(d.retoId)).data.estadoReto == 'Recibiendo propuestas'
+        && d.retoCodigo == get(/databases/$(database)/documents/innovacionRetos/$(d.retoId)).data.codigo
+        && d.titulo is string
+        && d.titulo.size() >= 3
+        && d.titulo.size() <= 150
+        && d.autorNombre is string
+        && d.autorNombre.size() >= 2
+        && d.autorNombre.size() <= 120
+        && d.organizacion is string
+        && d.organizacion.size() <= 140
+        && d.territorio is string
+        && d.territorio.size() >= 2
+        && d.territorio.size() <= 120
+        && d.resumen is string
+        && d.resumen.size() >= 10
+        && d.resumen.size() <= 800
+        && d.descripcion is string
+        && d.descripcion.size() >= 20
+        && d.descripcion.size() <= 2500
+        && d.beneficiarios is string
+        && d.beneficiarios.size() >= 3
+        && d.beneficiarios.size() <= 700
+        && d.impactoEsperado is string
+        && d.impactoEsperado.size() >= 3
+        && d.impactoEsperado.size() <= 700
+        && d.recursos is string
+        && d.recursos.size() <= 700
+        && d.viabilidad is string
+        && d.viabilidad.size() <= 700
+        && d.tiempoImplementacion is string
+        && d.tiempoImplementacion.size() <= 100
+        && d.innovacion is string
+        && d.innovacion.size() >= 3
+        && d.innovacion.size() <= 900
+        && d.enlaceAnexo is string
+        && d.enlaceAnexo.size() <= 500
+        && d.autorizacionPublicacion == true
+        && d.estadoModeracion == 'pendiente'
+        && d.estadoPublicacion == 'pendiente'
+        && d.seleccionada == false
+        && d.votosPublicados == 0
+        && d.porcentajeVotacion == 0
+        && d.puntajeFinal == 0
+        && d.justificacionSeleccion == ''
+        && d.resultadoCriterios == ''
+        && d.fechaSeleccion == ''
+        && d.enlaceActaSeleccion == ''
+        && d.origen == 'san_pedro_innova'
+        && d.createdAt == request.time
+        && d.updatedAt == request.time;
+    }
+
+    function validInnovationProposalPrivateCreate(proposalId) {
+      let d = request.resource.data;
+
+      return signedIn()
+        && d.keys().hasAll([
+          'propuestaId', 'retoId', 'userId', 'email',
+          'nombreCuenta', 'createdAt', 'updatedAt'
+        ])
+        && d.keys().hasOnly([
+          'propuestaId', 'retoId', 'userId', 'email',
+          'nombreCuenta', 'createdAt', 'updatedAt'
+        ])
+        && d.propuestaId == proposalId
+        && d.retoId is string
+        && d.retoId.size() > 0
+        && d.userId == request.auth.uid
+        && hasEmail()
+        && d.email is string
+        && d.email == request.auth.token.email
+        && d.email.size() <= 254
+        && d.nombreCuenta is string
+        && d.nombreCuenta.size() <= 160
+        && d.createdAt == request.time
+        && d.updatedAt == request.time;
+    }
+
+    function validInnovationVoteCreate(voteId) {
+      let d = request.resource.data;
+
+      return signedIn()
+        && d.keys().hasAll([
+          'retoId', 'propuestaId', 'userId', 'createdAt'
+        ])
+        && d.keys().hasOnly([
+          'retoId', 'propuestaId', 'userId', 'createdAt'
+        ])
+        && d.userId == request.auth.uid
+        && voteId == d.retoId + '_' + request.auth.uid
+        && exists(/databases/$(database)/documents/innovacionRetos/$(d.retoId))
+        && get(/databases/$(database)/documents/innovacionRetos/$(d.retoId)).data.estadoPublicacion == 'publicado'
+        && get(/databases/$(database)/documents/innovacionRetos/$(d.retoId)).data.estadoReto == 'En votación'
+        && exists(/databases/$(database)/documents/innovacionPropuestas/$(d.propuestaId))
+        && get(/databases/$(database)/documents/innovacionPropuestas/$(d.propuestaId)).data.retoId == d.retoId
+        && get(/databases/$(database)/documents/innovacionPropuestas/$(d.propuestaId)).data.estadoPublicacion == 'publicado'
+        && d.createdAt == request.time;
+    }
+
     // Compatibilidad con el flujo actual de cancelación.
     // No concede lectura pública de correos ni de tokens.
     function validPublicSubscriptionUpdate() {
@@ -881,6 +1067,129 @@ service cloud.firestore {
 
       // La creación, edición, publicación y eliminación de decisiones
       // corresponde exclusivamente al superadministrador.
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // RETOS DE COLABORACIÓN E INNOVACIÓN ABIERTA
+    // La ciudadanía consulta información publicada. La gestión
+    // institucional corresponde exclusivamente al superadministrador.
+    // ─────────────────────────────────────────────────────────────
+
+    match /innovacionProblematicas/{documentId} {
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionRetos/{documentId} {
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionConsultas/{documentId} {
+      allow create: if validInnovationConsultationCreate();
+
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
+      allow update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionPropuestas/{documentId} {
+      allow create: if validInnovationProposalCreate();
+
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
+      allow update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionPropuestasPrivadas/{proposalId} {
+      allow create: if validInnovationProposalPrivateCreate(proposalId);
+      allow get: if isSuperAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow list, update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionVotos/{voteId} {
+      allow create: if validInnovationVoteCreate(voteId);
+      allow get: if isSuperAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isSuperAdmin();
+      allow update, delete: if false;
+    }
+
+    match /innovacionReportesVotacion/{documentId} {
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionPlanesTrabajo/{documentId} {
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /innovacionPrototipos/{documentId} {
+      allow get: if isSuperAdmin()
+        || publishedInnovationDocument();
+
+      allow list: if isSuperAdmin()
+        || (
+          request.query.limit != null
+          && request.query.limit <= 200
+          && publishedInnovationDocument()
+        );
+
       allow create, update, delete: if isSuperAdmin();
     }
 

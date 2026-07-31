@@ -1,729 +1,216 @@
-import { auth, db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
+import { DATOS_INICIALES, FUENTES_OFICIALES } from './datos-iniciales.js';
 import {
-  GoogleAuthProvider,
-  getRedirectResult,
-  onAuthStateChanged,
-  signInWithPopup,
-  signInWithRedirect,
-  signOut
-} from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  query,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  where
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, limit, query,
+  serverTimestamp, setDoc, updateDoc, where, writeBatch
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js';
+import {
+  GoogleAuthProvider, getRedirectResult, onAuthStateChanged, signInWithPopup,
+  signInWithRedirect, signOut
+} from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
 
-const loginView = document.querySelector('#vista-login');
-const dashboardView = document.querySelector('#vista-panel');
-const googleButton = document.querySelector('#iniciar-google');
-const loginStatus = document.querySelector('#estado-login');
-const adminUser = document.querySelector('#usuario-admin');
-const logoutButton = document.querySelector('#cerrar-sesion');
-const refreshButton = document.querySelector('#actualizar-panel');
-const exportButton = document.querySelector('#exportar-admin');
-const adminNavButtons = [...document.querySelectorAll('[data-vista]')];
-const summaryView = document.querySelector('#vista-resumen');
-const formView = document.querySelector('#vista-formulario');
-const contributionsView = document.querySelector('#vista-aportes');
-const decisionForm = document.querySelector('#form-decision');
-const tableBody = document.querySelector('#tabla-decisiones');
-const loadingDecisions = document.querySelector('#admin-cargando');
-const emptyDecisions = document.querySelector('#admin-sin-registros');
-const adminCount = document.querySelector('#admin-conteo');
-const searchInput = document.querySelector('#admin-buscar');
-const statusFilter = document.querySelector('#admin-filtro-estado');
-const publicationFilter = document.querySelector('#admin-filtro-publicacion');
-const yearFilter = document.querySelector('#admin-filtro-vigencia');
-const clearButton = document.querySelector('#admin-limpiar');
-const createButton = document.querySelector('#crear-decision');
-const cancelButton = document.querySelector('#cancelar-edicion');
-const saveDraftButton = document.querySelector('#guardar-borrador');
-const formStatus = document.querySelector('#estado-formulario');
-const progressInput = document.querySelector('#porcentajeAvance');
-const progressOutput = document.querySelector('#valor-avance');
-const contributionSearch = document.querySelector('#buscar-aporte-admin');
-const contributionType = document.querySelector('#tipo-aporte-admin');
-const clearContributionFilters = document.querySelector('#limpiar-aportes-admin');
-const contributionAdminList = document.querySelector('#lista-aportes-admin');
-const contributionAdminLoading = document.querySelector('#cargando-aportes-admin');
-const contributionAdminEmpty = document.querySelector('#sin-aportes-admin');
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt:'select_account' });
+const SUPER_ROLES = new Set(['super_admin','superadmin','super_administrador','superadministrador','administrador_principal']);
+const titles = { dashboard:'Resumen general', participacion:'Participación centralizada', problematicas:'Problemáticas en consulta', retos:'Convocatorias y retos', propuestas:'Propuestas ciudadanas', votaciones:'Cortes oficiales de votación', planes:'Planes de implementación', prototipos:'Desarrollos y prototipos' };
+const state = { user:null, view:'dashboard', problematicas:[], retos:[], propuestas:[], privados:[], votos:[], reportes:[], planes:[], prototipos:[], consultas:[], aportesPublicos:[], formularios:[], evaluaciones:[], autoSeedAttempted:false };
 
-const SUPER_ROLES = new Set([
-  'super_admin', 'superadmin', 'super_administrador',
-  'superadministrador', 'administrador_principal'
-]);
-
-const formFields = [
-  'codigo', 'vigencia', 'tipoRegistro', 'fechaDecision', 'titulo', 'tema', 'territorio',
-  'poblacionBeneficiaria', 'tipoProceso', 'fechaProceso', 'procesoParticipativo',
-  'numeroParticipantes', 'numeroAportes', 'frecuenciaParticipacion', 'canalesParticipacion',
-  'nivelIncorporacion', 'codigosAportes', 'resumenProblema',
-  'sintesisAportes', 'decision', 'fundamentoTecnico', 'fundamentoJuridico',
-  'fundamentoPresupuestal', 'interpretacionAutorizada', 'justificacionNoAdopcion',
-  'dependenciaResponsable', 'responsableSeguimiento', 'accionComprometida',
-  'fechaInicio', 'fechaCumplimiento', 'frecuenciaSeguimiento', 'estadoDecision',
-  'porcentajeAvance', 'indicador', 'meta', 'resultadoActual', 'observacionesSeguimiento',
-  'enlaceActa', 'enlaceDecision', 'enlaceEvidencia', 'enlacesAdicionales',
-  'estadoPublicacion', 'fechaPublicacion', 'destacado'
-];
-
-const completenessFields = [
-  'titulo', 'fechaDecision', 'tema', 'territorio', 'procesoParticipativo', 'resumenProblema',
-  'sintesisAportes', 'decision', 'fundamentoTecnico', 'fundamentoJuridico',
-  'fundamentoPresupuestal', 'dependenciaResponsable', 'responsableSeguimiento',
-  'accionComprometida', 'frecuenciaSeguimiento', 'indicador', 'meta', 'resultadoActual',
-  'estadoDecision', 'fechaPublicacion'
-];
-
-let currentUser = null;
-let decisions = [];
-let filteredDecisions = [];
-let contributions = [];
-
-function statusClass(status) {
-  const map = {
-    'En análisis': 'analisis',
-    'Adoptada': 'adoptada',
-    'En ejecución': 'ejecucion',
-    'Cumplida': 'cumplida',
-    'No adoptada': 'no-adoptada',
-    'Suspendida': 'suspendida'
-  };
-  return map[status] || 'analisis';
+function normalize(value){return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function escapeHtml(value){return String(value??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function safeUrl(value){try{const u=new URL(String(value||''));return ['http:','https:'].includes(u.protocol)?u.href:''}catch{return''}}
+function timestampDate(value){if(!value)return null;if(typeof value.toDate==='function')return value.toDate();const d=new Date(value);return Number.isNaN(d.getTime())?null:d}
+function formatDateTime(value){const d=timestampDate(value);return d?d.toLocaleString('es-CO',{dateStyle:'medium',timeStyle:'short'}):'Sin fecha'}
+function formatDate(value){if(!value)return 'Sin fecha';const d=/^\d{4}-\d{2}-\d{2}$/.test(String(value))?new Date(`${value}T12:00:00`):timestampDate(value);return d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('es-CO',{year:'numeric',month:'short',day:'numeric'}):'Sin fecha'}
+function todayBogota(){return new Date().toLocaleDateString('en-CA',{timeZone:'America/Bogota'})}
+function generateCode(prefix,year=2026,length=7){const alphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const values=new Uint32Array(length);crypto.getRandomValues(values);return `${prefix}-${year}-${[...values].map(v=>alphabet[v%alphabet.length]).join('')}`}
+function csvCell(v){return `"${String(v??'').replace(/"/g,'""')}"`}
+function downloadCsv(name,headers,rows){const content='\ufeff'+[headers,...rows].map(r=>r.map(csvCell).join(';')).join('\r\n');const blob=new Blob([content],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function toast(message,type='info'){const r=$('#toast-region');const n=document.createElement('div');n.className=`toast ${type}`;n.textContent=message;r.append(n);setTimeout(()=>n.remove(),5200)}
+function roleFrom(data={}){return normalize(data.role||data.rol||data.tipoUsuario||data.userRole||'guest')}
+function readValue(id,root=document){const el=$(`#${id}`,root);if(!el)return'';if(el.type==='checkbox')return el.checked;return typeof el.value==='string'?el.value.trim():el.value}
+function numberValue(id,root=document){const n=Number(readValue(id,root));return Number.isFinite(n)?n:0}
+function statusPill(text){return `<span class="status-pill ${normalize(text).replace(/\s+/g,'-')}">${escapeHtml(text||'Sin estado')}</span>`}
+function publicationPill(value){return value==='publicado'?'<span class="status-pill convertida">Publicado</span>':'<span class="status-pill consulta">Borrador</span>'}
+function sortUpdated(a,b){return (timestampDate(b.updatedAt||b.createdAt)?.getTime()||0)-(timestampDate(a.updatedAt||a.createdAt)?.getTime()||0)}
+async function isSuperAdmin(user){
+  const token=await user.getIdTokenResult(true);const tr=normalize(token.claims.role||token.claims.userRole||(token.claims.super_admin===true?'super_admin':''));if(SUPER_ROLES.has(tr))return true;
+  for(const path of [`users/${user.uid}`,user.email?`users/${user.email}`:'']){if(!path)continue;try{const snap=await getDoc(doc(db,path));if(snap.exists()&&snap.data().active!==false&&SUPER_ROLES.has(roleFrom(snap.data())))return true}catch(error){console.warn(error)}}return false;
 }
-
-function createStatusBadge(status) {
-  const badge = document.createElement('span');
-  badge.className = `badge ${statusClass(status)}`;
-  badge.textContent = status || 'En análisis';
-  return badge;
-}
-
-function normalizeRole(value) {
-  return String(value || '').trim().toLowerCase();
-}
-
-function roleFromData(data = {}) {
-  return normalizeRole(data.role || data.rol || data.tipoUsuario || data.userRole || 'guest');
-}
-
-async function isSuperAdmin(user) {
-  const token = await user.getIdTokenResult(true);
-  const tokenRole = normalizeRole(
-    token.claims.role || token.claims.userRole ||
-    (token.claims.super_admin === true ? 'super_admin' : '')
-  );
-  if (SUPER_ROLES.has(tokenRole)) return true;
-
-  const paths = [`users/${user.uid}`];
-  if (user.email) paths.push(`users/${user.email}`);
-  for (const path of paths) {
-    try {
-      const snapshot = await getDoc(doc(db, path));
-      if (!snapshot.exists()) continue;
-      const data = snapshot.data();
-      if (data.active === false) continue;
-      if (SUPER_ROLES.has(roleFromData(data))) return true;
-    } catch (error) {
-      console.warn('No fue posible verificar el perfil de acceso:', error);
-    }
-  }
-  return false;
-}
-
-function setLoginStatus(message, type = 'info') {
-  loginStatus.textContent = message;
-  loginStatus.className = `notice ${type}`;
-  loginStatus.hidden = false;
-}
-
-function setFormStatus(message, type = 'info') {
-  formStatus.textContent = message;
-  formStatus.className = `notice ${type}`;
-  formStatus.hidden = false;
-}
-
-function hideFormStatus() {
-  formStatus.hidden = true;
-}
-
-function showLogin() {
-  dashboardView.hidden = true;
-  loginView.hidden = false;
-  adminUser.textContent = '';
-}
-
-function showDashboard(user) {
-  loginView.hidden = true;
-  dashboardView.hidden = false;
-  adminUser.textContent = user.displayName || user.email || user.uid;
-}
-
-function switchView(viewName) {
-  summaryView.hidden = viewName !== 'resumen';
-  formView.hidden = viewName !== 'formulario';
-  contributionsView.hidden = viewName !== 'aportes';
-  adminNavButtons.forEach((button) => button.classList.toggle('active', button.dataset.vista === viewName));
-  if (viewName === 'aportes' && !contributions.length) loadContributions();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function timestampToDate(value) {
-  if (!value) return null;
-  if (typeof value.toDate === 'function') return value.toDate();
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function formatTimestamp(value) {
-  const date = timestampToDate(value);
-  return date ? date.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha';
-}
-
-function normalizeText(value) {
-  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-}
-
-function generateCode(year) {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let suffix = '';
-  crypto.getRandomValues(new Uint32Array(6)).forEach((value) => { suffix += alphabet[value % alphabet.length]; });
-  return `DEC-${year}-${suffix}`;
-}
-
-function currentDateString() {
-  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
-}
-
-function valueOf(id) {
-  const element = document.querySelector(`#${id}`);
-  if (!element) return '';
-  if (element.type === 'checkbox') return element.checked;
-  return element.value.trim ? element.value.trim() : element.value;
-}
-
-function numberOf(id) {
-  const value = Number(valueOf(id));
-  return Number.isFinite(value) ? value : 0;
-}
-
-function collectFormData(publicationOverride = '') {
-  const publicationStatus = publicationOverride || valueOf('estadoPublicacion');
-  let publicationDate = valueOf('fechaPublicacion');
-  if (publicationStatus === 'publicado' && !publicationDate) publicationDate = currentDateString();
-
-  return {
-    codigo: valueOf('codigo'),
-    vigencia: numberOf('vigencia'),
-    tipoRegistro: valueOf('tipoRegistro'),
-    fechaDecision: valueOf('fechaDecision'),
-    titulo: valueOf('titulo'),
-    tema: valueOf('tema'),
-    territorio: valueOf('territorio'),
-    poblacionBeneficiaria: valueOf('poblacionBeneficiaria'),
-    tipoProceso: valueOf('tipoProceso'),
-    fechaProceso: valueOf('fechaProceso'),
-    procesoParticipativo: valueOf('procesoParticipativo'),
-    numeroParticipantes: numberOf('numeroParticipantes'),
-    numeroAportes: numberOf('numeroAportes'),
-    frecuenciaParticipacion: valueOf('frecuenciaParticipacion'),
-    canalesParticipacion: valueOf('canalesParticipacion'),
-    nivelIncorporacion: valueOf('nivelIncorporacion'),
-    codigosAportes: valueOf('codigosAportes'),
-    resumenProblema: valueOf('resumenProblema'),
-    sintesisAportes: valueOf('sintesisAportes'),
-    decision: valueOf('decision'),
-    fundamentoTecnico: valueOf('fundamentoTecnico'),
-    fundamentoJuridico: valueOf('fundamentoJuridico'),
-    fundamentoPresupuestal: valueOf('fundamentoPresupuestal'),
-    interpretacionAutorizada: valueOf('interpretacionAutorizada'),
-    justificacionNoAdopcion: valueOf('justificacionNoAdopcion'),
-    dependenciaResponsable: valueOf('dependenciaResponsable'),
-    responsableSeguimiento: valueOf('responsableSeguimiento'),
-    accionComprometida: valueOf('accionComprometida'),
-    fechaInicio: valueOf('fechaInicio'),
-    fechaCumplimiento: valueOf('fechaCumplimiento'),
-    frecuenciaSeguimiento: valueOf('frecuenciaSeguimiento'),
-    estadoDecision: valueOf('estadoDecision'),
-    porcentajeAvance: numberOf('porcentajeAvance'),
-    indicador: valueOf('indicador'),
-    meta: valueOf('meta'),
-    resultadoActual: valueOf('resultadoActual'),
-    observacionesSeguimiento: valueOf('observacionesSeguimiento'),
-    enlaceActa: valueOf('enlaceActa'),
-    enlaceDecision: valueOf('enlaceDecision'),
-    enlaceEvidencia: valueOf('enlaceEvidencia'),
-    enlacesAdicionales: valueOf('enlacesAdicionales').split(/\r?\n/).map((line) => line.trim()).filter(Boolean),
-    estadoPublicacion: publicationStatus,
-    fechaPublicacion: publicationDate,
-    destacado: Boolean(valueOf('destacado')),
-    updatedAt: serverTimestamp(),
-    updatedBy: currentUser.uid,
-    updatedByEmail: currentUser.email || ''
-  };
-}
-
-function resetForm() {
-  decisionForm.reset();
-  document.querySelector('#documento-id').value = '';
-  document.querySelector('#vigencia').value = new Date().getFullYear();
-  document.querySelector('#codigo').value = generateCode(new Date().getFullYear());
-  document.querySelector('#fechaDecision').value = currentDateString();
-  document.querySelector('#estadoPublicacion').value = 'borrador';
-  document.querySelector('#estadoDecision').value = 'En análisis';
-  document.querySelector('#porcentajeAvance').value = 0;
-  document.querySelector('#numeroParticipantes').value = 0;
-  document.querySelector('#numeroAportes').value = 0;
-  progressOutput.textContent = '0%';
-  hideFormStatus();
-}
-
-function setFormData(item) {
-  resetForm();
-  document.querySelector('#documento-id').value = item.id;
-  formFields.forEach((fieldName) => {
-    const element = document.querySelector(`#${fieldName}`);
-    if (!element) return;
-    if (fieldName === 'enlacesAdicionales') {
-      element.value = Array.isArray(item.enlacesAdicionales) ? item.enlacesAdicionales.join('\n') : '';
-    } else if (element.type === 'checkbox') {
-      element.checked = Boolean(item[fieldName]);
-    } else if (item[fieldName] != null) {
-      element.value = item[fieldName];
-    }
-  });
-  progressOutput.textContent = `${Number(item.porcentajeAvance || 0)}%`;
-  switchView('formulario');
-  document.querySelector('#titulo').focus();
-}
-
-function calculateCompleteness(item) {
-  const completed = completenessFields.filter((field) => {
-    const value = item[field];
-    return value !== '' && value != null;
-  }).length;
-  return Math.round((completed / completenessFields.length) * 100);
-}
-
-function uniqueYears() {
-  return [...new Set(decisions.map((item) => String(item.vigencia)).filter(Boolean))]
-    .sort((a, b) => Number(b) - Number(a));
-}
-
-function refreshYearFilter() {
-  const selected = yearFilter.value;
-  [...yearFilter.options].slice(1).forEach((option) => option.remove());
-  uniqueYears().forEach((year) => {
-    const option = document.createElement('option');
-    option.value = year;
-    option.textContent = year;
-    yearFilter.appendChild(option);
-  });
-  if ([...yearFilter.options].some((option) => option.value === selected)) yearFilter.value = selected;
-}
-
-function updateStats(data = decisions) {
-  document.querySelector('#admin-total').textContent = data.length.toLocaleString('es-CO');
-  document.querySelector('#admin-publicadas').textContent = data.filter((item) => item.estadoPublicacion === 'publicado').length.toLocaleString('es-CO');
-  document.querySelector('#admin-ejecucion').textContent = data.filter((item) => item.estadoDecision === 'En ejecución').length.toLocaleString('es-CO');
-  document.querySelector('#admin-cumplidas').textContent = data.filter((item) => item.estadoDecision === 'Cumplida').length.toLocaleString('es-CO');
-  const average = data.length ? Math.round(data.reduce((sum, item) => sum + Number(item.porcentajeAvance || 0), 0) / data.length) : 0;
-  document.querySelector('#admin-promedio').textContent = `${average}%`;
-}
-
-function createTextCell(row, value) {
-  const cell = document.createElement('td');
-  cell.textContent = value == null || value === '' ? '—' : String(value);
-  row.appendChild(cell);
-  return cell;
-}
-
-function renderDecisionTable() {
-  tableBody.replaceChildren();
-  filteredDecisions.forEach((item) => {
-    const row = document.createElement('tr');
-    createTextCell(row, item.codigo || item.id);
-    const titleCell = createTextCell(row, item.titulo || 'Sin título');
-    const small = document.createElement('small');
-    small.textContent = `${item.tema || 'Sin tema'} · ${item.dependenciaResponsable || 'Sin dependencia'}`;
-    small.style.display = 'block';
-    small.style.color = '#667085';
-    small.style.marginTop = '4px';
-    titleCell.appendChild(small);
-    const statusCell = document.createElement('td');
-    statusCell.appendChild(createStatusBadge(item.estadoDecision));
-    row.appendChild(statusCell);
-
-    const progressCell = document.createElement('td');
-    const progressValue = Math.max(0, Math.min(100, Number(item.porcentajeAvance || 0)));
-    const progressWrapper = document.createElement('div');
-    progressWrapper.className = 'table-progress';
-    const progressBar = document.createElement('span');
-    progressBar.className = `table-progress-bar ${statusClass(item.estadoDecision)}`;
-    progressBar.setAttribute('role', 'progressbar');
-    progressBar.setAttribute('aria-valuemin', '0');
-    progressBar.setAttribute('aria-valuemax', '100');
-    progressBar.setAttribute('aria-valuenow', String(progressValue));
-    const progressFill = document.createElement('span');
-    progressFill.style.width = `${progressValue}%`;
-    progressBar.appendChild(progressFill);
-    progressWrapper.append(progressBar, document.createTextNode(`${progressValue}%`));
-    progressCell.appendChild(progressWrapper);
-    row.appendChild(progressCell);
-
-    createTextCell(row, item.estadoPublicacion === 'publicado' ? 'Publicada' : 'Borrador');
-
-    const completenessCell = document.createElement('td');
-    const completeness = calculateCompleteness(item);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'completeness';
-    const bar = document.createElement('span');
-    bar.className = 'completeness-bar';
-    const fill = document.createElement('span');
-    fill.style.width = `${completeness}%`;
-    bar.appendChild(fill);
-    wrapper.append(bar, document.createTextNode(`${completeness}%`));
-    completenessCell.appendChild(wrapper);
-    row.appendChild(completenessCell);
-
-    createTextCell(row, formatTimestamp(item.updatedAt || item.createdAt));
-    const actionCell = document.createElement('td');
-    actionCell.className = 'actions-cell';
-
-    const editButton = document.createElement('button');
-    editButton.type = 'button';
-    editButton.className = 'btn secondary small';
-    editButton.textContent = 'Editar';
-    editButton.addEventListener('click', () => setFormData(item));
-
-    const duplicateButton = document.createElement('button');
-    duplicateButton.type = 'button';
-    duplicateButton.className = 'btn secondary small';
-    duplicateButton.textContent = 'Duplicar';
-    duplicateButton.addEventListener('click', () => duplicateDecision(item));
-
-    const deleteButton = document.createElement('button');
-    deleteButton.type = 'button';
-    deleteButton.className = 'btn danger small';
-    deleteButton.textContent = 'Eliminar';
-    deleteButton.addEventListener('click', () => removeDecision(item));
-
-    actionCell.append(editButton, duplicateButton, deleteButton);
-    row.appendChild(actionCell);
-    tableBody.appendChild(row);
-  });
-  emptyDecisions.hidden = filteredDecisions.length > 0;
-  adminCount.textContent = `${filteredDecisions.length.toLocaleString('es-CO')} de ${decisions.length.toLocaleString('es-CO')} registros`;
-}
-
-function applyFilters() {
-  const text = normalizeText(searchInput.value);
-  const status = statusFilter.value;
-  const publication = publicationFilter.value;
-  const year = yearFilter.value;
-  filteredDecisions = decisions.filter((item) => {
-    const haystack = normalizeText([item.codigo, item.titulo, item.tema, item.territorio, item.dependenciaResponsable, item.decision].join(' '));
-    return (!text || haystack.includes(text))
-      && (!status || item.estadoDecision === status)
-      && (!publication || item.estadoPublicacion === publication)
-      && (!year || String(item.vigencia) === year);
-  });
-  updateStats(filteredDecisions);
-  renderDecisionTable();
-}
-
-async function audit(action, itemId, code) {
-  try {
-    await addDoc(collection(db, 'auditLogs'), {
-      action,
-      module: 'laboratorio_ideas_ciudadanas',
-      collection: 'participacionDecisiones',
-      documentId: itemId,
-      code: code || '',
-      userId: currentUser.uid,
-      userEmail: currentUser.email || '',
-      createdAt: serverTimestamp()
-    });
-  } catch (error) {
-    console.warn('No fue posible registrar la auditoría:', error);
-  }
-}
-
-async function saveDecision(event, publicationOverride = '') {
-  if (event) event.preventDefault();
-  hideFormStatus();
-  const targetPublication = publicationOverride || valueOf('estadoPublicacion');
-  if (targetPublication === 'publicado' && !decisionForm.reportValidity()) {
-    setFormStatus('Complete los campos obligatorios antes de publicar la decisión.', 'error');
-    return;
-  }
-
-  const saveButtons = [saveDraftButton, document.querySelector('#guardar-publicar')];
-  saveButtons.forEach((button) => { button.disabled = true; });
-  try {
-    const data = collectFormData(publicationOverride);
-    if (!data.codigo) data.codigo = generateCode(data.vigencia || new Date().getFullYear());
-    document.querySelector('#codigo').value = data.codigo;
-    const documentId = document.querySelector('#documento-id').value;
-
-    if (documentId) {
-      await updateDoc(doc(db, 'participacionDecisiones', documentId), data);
-      await audit('update', documentId, data.codigo);
-      setFormStatus('La decisión fue actualizada correctamente.', 'success');
-    } else {
-      const newReference = doc(collection(db, 'participacionDecisiones'));
-      await setDoc(newReference, {
-        ...data,
-        createdAt: serverTimestamp(),
-        createdBy: currentUser.uid,
-        createdByEmail: currentUser.email || ''
-      });
-      document.querySelector('#documento-id').value = newReference.id;
-      await audit('create', newReference.id, data.codigo);
-      setFormStatus('La decisión fue creada correctamente.', 'success');
-    }
-    await loadDecisions();
-  } catch (error) {
-    console.error(error);
-    setFormStatus(error.code?.includes('permission-denied')
-      ? 'La cuenta no tiene permisos para guardar esta información.'
-      : 'No fue posible guardar la decisión. Revise la conexión e intente nuevamente.', 'error');
-  } finally {
-    saveButtons.forEach((button) => { button.disabled = false; });
-  }
-}
-
-function duplicateDecision(item) {
-  const copy = {
-    ...item,
-    id: '',
-    codigo: generateCode(item.vigencia || new Date().getFullYear()),
-    titulo: `${item.titulo || 'Decisión'} (copia)`,
-    estadoPublicacion: 'borrador',
-    fechaPublicacion: '',
-    destacado: false
-  };
-  setFormData(copy);
-  document.querySelector('#documento-id').value = '';
-  setFormStatus('Se creó una copia en borrador. Revise la información y guárdela.', 'info');
-}
-
-async function removeDecision(item) {
-  const confirmation = window.confirm(`¿Desea eliminar definitivamente la decisión ${item.codigo || item.id}?`);
-  if (!confirmation) return;
-  try {
-    await deleteDoc(doc(db, 'participacionDecisiones', item.id));
-    await audit('delete', item.id, item.codigo);
-    await loadDecisions();
-  } catch (error) {
-    console.error(error);
-    window.alert('No fue posible eliminar la decisión.');
-  }
-}
-
-async function loadDecisions() {
-  loadingDecisions.hidden = false;
-  emptyDecisions.hidden = true;
-  refreshButton.disabled = true;
-  try {
-    const snapshot = await getDocs(query(collection(db, 'participacionDecisiones'), limit(1000)));
-    decisions = snapshot.docs.map((document) => ({ id: document.id, ...document.data() }));
-    decisions.sort((a, b) => {
-      const dateA = timestampToDate(a.updatedAt || a.createdAt)?.getTime() || 0;
-      const dateB = timestampToDate(b.updatedAt || b.createdAt)?.getTime() || 0;
-      return dateB - dateA;
-    });
-    refreshYearFilter();
-    applyFilters();
-  } catch (error) {
-    console.error(error);
-    tableBody.replaceChildren();
-    emptyDecisions.hidden = false;
-    emptyDecisions.querySelector('strong').textContent = 'No fue posible consultar las decisiones';
-    emptyDecisions.querySelector('span').textContent = error.code?.includes('permission-denied')
-      ? 'La cuenta no tiene permisos para esta sección.'
-      : 'Revise la conexión e intente nuevamente.';
-  } finally {
-    loadingDecisions.hidden = true;
-    refreshButton.disabled = false;
-  }
-}
-
-function csvEscape(value) {
-  const text = value == null ? '' : (Array.isArray(value) ? value.join(' | ') : String(value));
-  return `"${text.replaceAll('"', '""')}"`;
-}
-
-function exportCsv() {
-  const keys = [
-    'codigo', 'vigencia', 'tipoRegistro', 'fechaDecision', 'titulo', 'tema', 'territorio',
-    'poblacionBeneficiaria', 'tipoProceso', 'fechaProceso', 'procesoParticipativo',
-    'numeroParticipantes', 'numeroAportes', 'frecuenciaParticipacion', 'canalesParticipacion',
-    'nivelIncorporacion', 'codigosAportes', 'resumenProblema',
-    'sintesisAportes', 'decision', 'fundamentoTecnico', 'fundamentoJuridico',
-    'fundamentoPresupuestal', 'interpretacionAutorizada', 'justificacionNoAdopcion',
-    'dependenciaResponsable', 'responsableSeguimiento', 'accionComprometida',
-    'fechaInicio', 'fechaCumplimiento', 'frecuenciaSeguimiento', 'estadoDecision',
-    'porcentajeAvance', 'indicador', 'meta', 'resultadoActual', 'observacionesSeguimiento',
-    'enlaceActa', 'enlaceDecision', 'enlaceEvidencia', 'enlacesAdicionales',
-    'estadoPublicacion', 'fechaPublicacion', 'destacado'
+async function signInGoogle(){try{await signInWithPopup(auth,provider)}catch(error){if(error.code==='auth/popup-blocked')await signInWithRedirect(auth,provider);else if(!['auth/cancelled-popup-request','auth/popup-closed-by-user'].includes(error.code))setLoginStatus('No fue posible iniciar sesión con Google.','error')}}
+function setLoginStatus(message,type='info'){const el=$('#estado-login');el.textContent=message;el.className=`notice ${type}`;el.hidden=false}
+function showLogin(){state.user=null;$('#vista-login').hidden=false;$('#vista-panel').hidden=true}
+function showPanel(user){state.user=user;$('#vista-login').hidden=true;$('#vista-panel').hidden=false;$('#admin-name').textContent=user.displayName||'Superadministrador';$('#admin-email').textContent=user.email||'';$('#admin-avatar').textContent=(user.displayName||user.email||'A').charAt(0).toUpperCase();loadAll()}
+function switchView(view){state.view=view;$$('.admin-view').forEach(s=>s.hidden=s.id!==`view-${view}`);$$('[data-admin-view]').forEach(b=>b.classList.toggle('active',b.dataset.adminView===view));$('#admin-title').textContent=titles[view];$('#admin-breadcrumb').textContent=`Laboratorio / ${titles[view]}`;document.body.classList.remove('sidebar-open');if(view==='dashboard')renderDashboard();if(view==='participacion')renderParticipationCenter();if(view==='problematicas')renderProblematicas();if(view==='retos')renderRetos();if(view==='propuestas')renderPropuestas();if(view==='votaciones')renderReports();if(view==='planes')renderPlans();if(view==='prototipos')renderPrototypes();window.scrollTo({top:0,behavior:'smooth'})}
+async function listCollection(name){try{const snap=await getDocs(query(collection(db,name),limit(500)));return snap.docs.map(d=>({id:d.id,...d.data()})).sort(sortUpdated)}catch(error){console.error(name,error);return[]}}
+async function installInitialData(silent=false){
+  const mappings=[
+    ['innovacionProblematicas',DATOS_INICIALES.problematicas],
+    ['innovacionRetos',DATOS_INICIALES.retos],
+    ['innovacionPropuestas',DATOS_INICIALES.propuestas],
+    ['innovacionReportesVotacion',DATOS_INICIALES.reportes],
+    ['innovacionPlanesTrabajo',DATOS_INICIALES.planes],
+    ['innovacionPrototipos',DATOS_INICIALES.prototipos]
   ];
-  const rows = [keys.map(csvEscape).join(',')];
-  filteredDecisions.forEach((item) => rows.push(keys.map((key) => csvEscape(item[key])).join(',')));
-  const blob = new Blob([`\uFEFF${rows.join('\n')}`], { type: 'text/csv;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `laboratorio-decisiones-${currentDateString()}.csv`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
-
-function renderAdminContributions() {
-  const text = normalizeText(contributionSearch.value);
-  const type = contributionType.value;
-  const filtered = contributions.filter((item) => {
-    const haystack = normalizeText([item.codigo, item.nombre, item.tipo, item.comentario].join(' '));
-    return (!text || haystack.includes(text)) && (!type || item.tipo === type);
-  });
-  contributionAdminList.replaceChildren();
-  filtered.forEach((item) => {
-    const card = document.createElement('article');
-    card.className = 'admin-contribution';
-    const code = document.createElement('span');
-    code.className = 'code';
-    code.textContent = `${item.tipo || 'Aporte'} · ${item.codigo || item.id}`;
-    const title = document.createElement('h3');
-    title.textContent = item.nombre || 'Participante';
-    const textElement = document.createElement('p');
-    textElement.textContent = item.comentario || '';
-    const footer = document.createElement('footer');
-    const date = document.createElement('small');
-    date.textContent = formatTimestamp(item.createdAt);
-    const useButton = document.createElement('button');
-    useButton.type = 'button';
-    useButton.className = 'btn secondary small';
-    useButton.textContent = 'Usar en decisión';
-    useButton.addEventListener('click', () => useContribution(item));
-    footer.append(date, useButton);
-    card.append(code, title, textElement, footer);
-    contributionAdminList.appendChild(card);
-  });
-  contributionAdminEmpty.hidden = filtered.length > 0;
-}
-
-function useContribution(item) {
-  resetForm();
-  document.querySelector('#codigosAportes').value = item.codigo || item.id;
-  document.querySelector('#numeroAportes').value = 1;
-  document.querySelector('#sintesisAportes').value = `${item.tipo || 'Aporte'} presentado por ${item.nombre || 'la ciudadanía'}:\n${item.comentario || ''}`;
-  document.querySelector('#resumenProblema').value = item.comentario || '';
-  switchView('formulario');
-  setFormStatus('El aporte fue vinculado como insumo. Complete el análisis y la decisión institucional.', 'info');
-}
-
-async function loadContributions() {
-  contributionAdminLoading.hidden = false;
-  try {
-    const snapshot = await getDocs(query(
-      collection(db, 'participacionAportesPublicos'),
-      where('estadoPublicacion', '==', 'publicado'),
-      limit(200)
-    ));
-    contributions = snapshot.docs.map((document) => ({ id: document.id, ...document.data() }));
-    contributions.sort((a, b) => {
-      const dateA = timestampToDate(a.createdAt)?.getTime() || 0;
-      const dateB = timestampToDate(b.createdAt)?.getTime() || 0;
-      return dateB - dateA;
-    });
-    renderAdminContributions();
-  } catch (error) {
-    console.error(error);
-    contributionAdminEmpty.hidden = false;
-    contributionAdminEmpty.querySelector('strong').textContent = 'No fue posible consultar los aportes';
-    contributionAdminEmpty.querySelector('span').textContent = 'Revise los permisos y la conexión.';
-  } finally {
-    contributionAdminLoading.hidden = true;
-  }
-}
-
-async function loginWithGoogle() {
-  loginStatus.hidden = true;
-  googleButton.disabled = true;
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (error) {
-    if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(error.code)) {
-      await signInWithRedirect(auth, provider);
-      return;
+  const missing=[];
+  for(const [collectionName,items] of mappings){
+    for(const item of items){
+      const ref=doc(db,collectionName,item.id);
+      const snap=await getDoc(ref);
+      if(!snap.exists()) missing.push([collectionName,item]);
     }
-    console.error(error);
-    const messages = {
-      'auth/unauthorized-domain': 'Este dominio no está autorizado para el ingreso institucional.',
-      'auth/popup-closed-by-user': 'La ventana de ingreso fue cerrada antes de completar el proceso.',
-      'auth/cancelled-popup-request': 'El ingreso fue cancelado. Intente nuevamente.'
-    };
-    setLoginStatus(messages[error.code] || 'No fue posible iniciar sesión con Google.', 'error');
-  } finally {
-    googleButton.disabled = false;
   }
+  if(!missing.length){
+    if(!silent) toast('La información inicial ya está activada.','success');
+    const status=$('#seed-status');if(status)status.textContent=`Información base activa: ${FUENTES_OFICIALES.length} fuentes oficiales y ${DATOS_INICIALES.problematicas.length} problemáticas iniciales.`;
+    return 0;
+  }
+  const batch=writeBatch(db);
+  missing.forEach(([collectionName,item])=>{
+    const {id,...data}=item;
+    batch.set(doc(db,collectionName,id),{...data,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+  });
+  await batch.commit();
+  await audit('seed','innovacion',`base-${todayBogota()}`,`${missing.length} registros iniciales`);
+  const status=$('#seed-status');if(status)status.textContent=`Información inicial activada: ${missing.length} registros creados sin reemplazar información existente.`;
+  if(!silent)toast(`Se activaron ${missing.length} registros de información inicial.`,'success');
+  return missing.length;
 }
 
-adminNavButtons.forEach((button) => button.addEventListener('click', () => switchView(button.dataset.vista)));
-createButton.addEventListener('click', () => { resetForm(); switchView('formulario'); });
-cancelButton.addEventListener('click', () => switchView('resumen'));
-progressInput.addEventListener('input', () => { progressOutput.textContent = `${progressInput.value}%`; });
-decisionForm.addEventListener('submit', (event) => saveDecision(event));
-saveDraftButton.addEventListener('click', (event) => saveDecision(event, 'borrador'));
-refreshButton.addEventListener('click', async () => { await Promise.all([loadDecisions(), contributions.length ? loadContributions() : Promise.resolve()]); });
-exportButton.addEventListener('click', exportCsv);
-logoutButton.addEventListener('click', () => signOut(auth));
-googleButton.addEventListener('click', loginWithGoogle);
-[searchInput, statusFilter, publicationFilter, yearFilter].forEach((element) => element.addEventListener(element.tagName === 'INPUT' ? 'input' : 'change', applyFilters));
-clearButton.addEventListener('click', () => { searchInput.value = ''; statusFilter.value = ''; publicationFilter.value = ''; yearFilter.value = ''; applyFilters(); });
-[contributionSearch, contributionType].forEach((element) => element.addEventListener(element.tagName === 'INPUT' ? 'input' : 'change', renderAdminContributions));
-clearContributionFilters.addEventListener('click', () => { contributionSearch.value = ''; contributionType.value = ''; renderAdminContributions(); });
-document.querySelector('#vigencia').addEventListener('change', (event) => {
-  const codeInput = document.querySelector('#codigo');
-  if (!document.querySelector('#documento-id').value && /^DEC-\d{4}-/.test(codeInput.value)) codeInput.value = generateCode(Number(event.target.value) || new Date().getFullYear());
-});
-
-getRedirectResult(auth).catch((error) => {
-  console.error(error);
-  setLoginStatus('No fue posible completar el ingreso con Google.', 'error');
-});
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    currentUser = null;
-    showLogin();
-    return;
+async function loadAll(){
+  const [problematicas,retos,propuestas,privados,votos,reportes,planes,prototipos,consultas,aportesPublicos,formularios,evaluaciones]=await Promise.all([
+    listCollection('innovacionProblematicas'),listCollection('innovacionRetos'),listCollection('innovacionPropuestas'),listCollection('innovacionPropuestasPrivadas'),listCollection('innovacionVotos'),listCollection('innovacionReportesVotacion'),listCollection('innovacionPlanesTrabajo'),listCollection('innovacionPrototipos'),listCollection('innovacionConsultas'),listCollection('participacionAportesPublicos'),listCollection('participacionFormularios'),listCollection('evaluacionesParticipacion')
+  ]);
+  if(!state.autoSeedAttempted && problematicas.length===0 && retos.length===0){
+    state.autoSeedAttempted=true;
+    try{const created=await installInitialData(true);if(created>0)return loadAll()}catch(error){console.error('Carga inicial:',error);toast('No fue posible activar automáticamente la información inicial. Use el botón del panel.','error')}
   }
-  setLoginStatus('Verificando permisos…', 'info');
-  try {
-    if (!(await isSuperAdmin(user))) {
-      await signOut(auth);
-      setLoginStatus('La cuenta seleccionada no está autorizada como superadministrador.', 'error');
-      return;
-    }
-    currentUser = user;
-    showDashboard(user);
-    resetForm();
-    switchView('resumen');
-    await loadDecisions();
-  } catch (error) {
-    console.error(error);
-    await signOut(auth);
-    setLoginStatus('No fue posible validar los permisos de la cuenta.', 'error');
-  }
-});
+  Object.assign(state,{problematicas,retos,propuestas,privados,votos,reportes,planes,prototipos,consultas,aportesPublicos,formularios,evaluaciones});populateSelectors();switchView(state.view);
+}
+function populateSelectors(){
+  const options=state.retos.map(r=>`<option value="${r.id}">${escapeHtml(r.codigo||'')} · ${escapeHtml(r.titulo||'')}</option>`).join('');
+  ['#filtrar-propuesta-reto','#reporte-reto'].forEach(selector=>{const el=$(selector);const first=el.options[0]?.outerHTML||'<option value="">Seleccione</option>';el.innerHTML=first+options});
+}
+async function audit(action,collectionName,documentId,details=''){try{await addDoc(collection(db,'auditLogs'),{action,collection:collectionName,documentId,userId:state.user.uid,userEmail:state.user.email||'',details,createdAt:serverTimestamp()})}catch(error){console.warn('Auditoría:',error)}}
+async function saveRecord(collectionName,id,data){const ref=id?doc(db,collectionName,id):doc(collection(db,collectionName));const payload={...data,updatedAt:serverTimestamp()};if(!id)payload.createdAt=serverTimestamp();await setDoc(ref,payload,{merge:Boolean(id)});await audit(id?'update':'create',collectionName,ref.id,data.codigo||data.titulo||'');return ref.id}
+async function removeRecord(collectionName,id,label){if(!confirm(`¿Eliminar definitivamente ${label}?`))return;await deleteDoc(doc(db,collectionName,id));await audit('delete',collectionName,id,label);toast('Registro eliminado.','success');await loadAll()}
+async function removeProposal(id){if(!confirm('¿Eliminar definitivamente la propuesta y sus datos de contacto asociados?'))return;const batch=writeBatch(db);batch.delete(doc(db,'innovacionPropuestas',id));batch.delete(doc(db,'innovacionPropuestasPrivadas',id));await batch.commit();await audit('delete','innovacionPropuestas',id,'Propuesta y datos privados');toast('Propuesta eliminada.','success');await loadAll()}
+function openAdminModal(title,code,html){$('#admin-modal-title').textContent=title;$('#admin-modal-code').textContent=code||'Registro';$('#admin-modal-body').innerHTML=html;$('#modal-admin').hidden=false;document.body.classList.add('modal-open')}
+function closeAdminModal(){$('#modal-admin').hidden=true;document.body.classList.remove('modal-open')}
+function optionList(values,current=''){return values.map(v=>`<option ${v===current?'selected':''}>${escapeHtml(v)}</option>`).join('')}
+function formFooter(label='Guardar registro'){return `<div class="form-footer"><button class="btn outline" type="button" data-close-admin-modal>Cancelar</button><button class="btn primary dark" type="submit">${label}</button></div>`}
+function evaluationAverage(){
+  const values=state.evaluaciones.map(x=>Number(x.satisfaccionGeneral)).filter(Number.isFinite);
+  return values.length?values.reduce((a,b)=>a+b,0)/values.length:0;
+}
+function recommendationRate(){
+  if(!state.evaluaciones.length)return 0;
+  return (state.evaluaciones.filter(x=>x.recomendaria===true).length/state.evaluaciones.length)*100;
+}
+function renderDashboard(){
+  $('#dash-problematicas').textContent=state.problematicas.length;$('#dash-retos').textContent=state.retos.length;$('#dash-propuestas').textContent=state.propuestas.length;$('#dash-votos').textContent=state.votos.length;$('#dash-planes').textContent=state.planes.filter(x=>x.estadoPublicacion==='publicado').length;$('#dash-prototipos').textContent=state.prototipos.length;
+  $('#dash-aportes-open').textContent=state.aportesPublicos.length;$('#dash-inscripciones').textContent=state.formularios.length;$('#dash-evaluaciones').textContent=state.evaluaciones.length;$('#dash-satisfaccion').textContent=evaluationAverage().toFixed(1).replace('.',',');
+  const phases=['Próximo','Recibiendo propuestas','En votación','En evaluación','Solución seleccionada','En implementación','Cerrado','Suspendido'];const max=Math.max(1,...phases.map(p=>state.retos.filter(r=>r.estadoReto===p).length));$('#dashboard-fases').innerHTML=phases.map(p=>{const c=state.retos.filter(r=>r.estadoReto===p).length;return `<div class="distribution-row"><span>${p}</span><div class="distribution-track"><span style="--w:${(c/max)*100}%"></span></div><strong>${c}</strong></div>`}).join('');
+  const recent=[...state.aportesPublicos.map(x=>({...x,titulo:x.comentario,_type:'Tablero ciudadano'})),...state.consultas.map(x=>({...x,titulo:x.aporte,_type:'Aporte a problemática'})),...state.problematicas.map(x=>({...x,_type:'Problemática'})),...state.retos.map(x=>({...x,_type:'Reto'})),...state.propuestas.map(x=>({...x,_type:'Propuesta'})),...state.planes.map(x=>({...x,_type:'Plan'})),...state.prototipos.map(x=>({...x,_type:'Prototipo'}))].sort(sortUpdated).slice(0,8);$('#dashboard-recientes').innerHTML=recent.length?recent.map(x=>`<div class="recent-item"><div><strong>${escapeHtml(String(x.titulo||x.codigo||x._type).slice(0,100))}</strong><small>${x._type}</small></div><small>${formatDateTime(x.updatedAt||x.createdAt)}</small></div>`).join(''):'<p class="muted">No hay actividad registrada.</p>';
+  const checks=[['a','Problemáticas publicadas',state.problematicas.some(x=>x.estadoPublicacion==='publicado')],['b','Convocatoria publicada',state.retos.some(x=>x.estadoPublicacion==='publicado')],['c','Reporte de votación',state.reportes.some(x=>x.estadoPublicacion==='publicado')],['d','Solución seleccionada',state.propuestas.some(x=>x.seleccionada)],['e','Plan de trabajo',state.planes.some(x=>x.estadoPublicacion==='publicado')],['f','Prototipo publicado',state.prototipos.some(x=>x.estadoPublicacion==='publicado')]];$('#dashboard-cumplimiento').innerHTML=checks.map(([l,t,ok])=>`<div class="compliance-item ${ok?'ok':'pending'}"><span>${ok?'Cumple':'Pendiente'} · ${l}</span><strong>${t}</strong></div>`).join('');
+  const funnel=[['Problemáticas',state.problematicas.length],['Aportes a consultas',state.consultas.length],['Retos',state.retos.length],['Propuestas',state.propuestas.length],['Votos',state.votos.length],['Soluciones elegidas',state.propuestas.filter(x=>x.seleccionada).length],['Planes',state.planes.length],['Prototipos',state.prototipos.length]];const funnelMax=Math.max(1,...funnel.map(x=>x[1]));$('#dashboard-funnel').innerHTML=funnel.map(([label,value])=>`<div class="funnel-row"><span>${label}</span><div class="funnel-track"><div class="funnel-fill" style="width:${Math.max(value?4:0,(value/funnelMax)*100)}%"></div></div><strong>${value}</strong></div>`).join('');
+  const seedStatus=$('#seed-status');if(seedStatus&&state.problematicas.length)seedStatus.textContent=`Información base activa. El sistema contiene ${state.problematicas.length} problemáticas, ${state.retos.length} retos y referencias a ${FUENTES_OFICIALES.length} fuentes oficiales.`;
+}
+
+function renderParticipationCenter(){
+  $('#part-aportes').textContent=state.aportesPublicos.length;$('#part-consultas').textContent=state.consultas.length;$('#part-propuestas').textContent=state.propuestas.length;$('#part-votos').textContent=state.votos.length;$('#part-inscripciones').textContent=state.formularios.length;$('#part-evaluaciones').textContent=state.evaluaciones.length;$('#part-promedio').textContent=evaluationAverage().toFixed(1).replace('.',',');$('#part-recomendaria').textContent=`${recommendationRate().toFixed(0)} %`;
+  const board=$('#admin-aportes-publicos');board.innerHTML=state.aportesPublicos.slice(0,12).map(x=>`<article class="admin-feed-item"><header><strong>${escapeHtml(x.nombre||'Ciudadanía')}</strong><small>${escapeHtml(x.tipo||'Aporte')} · ${formatDateTime(x.createdAt)}</small></header><p>${escapeHtml(x.comentario||'')}</p>${x.respuestaInstitucional?`<small>Respuesta: ${escapeHtml(x.respuestaInstitucional)}</small>`:''}<div class="row-actions"><button class="text-button" type="button" data-respond-board="${x.id}">${x.respuestaInstitucional?'Editar respuesta':'Responder'}</button><button class="text-button danger" type="button" data-delete-board="${x.id}">Eliminar</button></div></article>`).join('')||'<p class="muted">No hay aportes en el tablero abierto.</p>';
+  const counts=[1,2,3,4,5].map(rating=>[rating,state.evaluaciones.filter(x=>Number(x.satisfaccionGeneral)===rating).length]);const max=Math.max(1,...counts.map(x=>x[1]));$('#admin-distribucion-evaluaciones').innerHTML=counts.reverse().map(([rating,count])=>`<div class="rating-row"><span>${rating} estrella${rating===1?'':'s'}</span><div class="rating-track"><div class="rating-fill" style="width:${(count/max)*100}%"></div></div><strong>${count}</strong></div>`).join('');
+  $('#admin-inscripciones').innerHTML=state.formularios.slice(0,12).map(x=>`<article class="admin-feed-item"><header><strong>${escapeHtml([x.nombres,x.apellidos].filter(Boolean).join(' ')||x.codigo||'Inscripción')}</strong><small>${formatDateTime(x.createdAt)}</small></header><p>${escapeHtml(x.actividad||'Actividad no especificada')} · ${escapeHtml(x.territorio||'Sin territorio')} · ${escapeHtml(x.modalidad||'')}</p><small>${escapeHtml(x.correo||'')} ${x.telefono?`· ${escapeHtml(x.telefono)}`:''}</small></article>`).join('')||'<p class="muted">No hay inscripciones registradas.</p>';
+  $('#admin-evaluaciones-recientes').innerHTML=state.evaluaciones.slice(0,12).map(x=>`<article class="admin-feed-item"><header><strong>${escapeHtml(x.actividad||x.codigo||'Evaluación')}</strong><small>${Number(x.satisfaccionGeneral)||0}/5 · ${formatDateTime(x.createdAt)}</small></header><p>${escapeHtml(x.aspectosMejorar||x.aspectosPositivos||'Sin comentario abierto')}</p><small>${escapeHtml(x.territorio||'')} · ${escapeHtml(x.mecanismo||'')}</small></article>`).join('')||'<p class="muted">No hay evaluaciones registradas.</p>';
+}
+
+function boardResponseForm(item={}){return `<form id="form-respuesta-tablero"><input type="hidden" id="board-response-id" value="${escapeHtml(item.id||'')}"><div class="form-section"><p><strong>${escapeHtml(item.nombre||'Ciudadanía')}:</strong> ${escapeHtml(item.comentario||'')}</p><div class="field"><label for="board-response-text">Respuesta institucional</label><textarea id="board-response-text" maxlength="1200" required>${escapeHtml(item.respuestaInstitucional||'')}</textarea><small>La respuesta será visible públicamente junto al aporte.</small></div></div>${formFooter('Publicar respuesta')}</form>`}
+async function submitBoardResponse(event){event.preventDefault();if(!event.currentTarget.reportValidity())return;const id=readValue('board-response-id');try{await updateDoc(doc(db,'participacionAportesPublicos',id),{respuestaInstitucional:readValue('board-response-text'),updatedAt:serverTimestamp()});await audit('respond','participacionAportesPublicos',id,'Respuesta institucional');toast('Respuesta publicada.','success');closeAdminModal();await loadAll()}catch(error){console.error(error);toast('No fue posible publicar la respuesta.','error')}}
+
+function renderProblematicas(){
+  const search=normalize($('#buscar-admin-problematica').value);const status=$('#filtrar-admin-problematica').value;const items=state.problematicas.filter(x=>(!search||normalize([x.codigo,x.titulo,x.tema,x.territorio].join(' ')).includes(search))&&(!status||x.estadoProblematica===status));const body=$('#tabla-problematicas');body.innerHTML='';$('#sin-admin-problematicas').hidden=items.length>0;
+  items.forEach(x=>body.insertAdjacentHTML('beforeend',`<tr><td><strong>${escapeHtml(x.codigo||'')}</strong></td><td><span class="table-title">${escapeHtml(x.titulo||'')}</span><span class="table-sub">${escapeHtml(x.territorio||'')}</span></td><td>${escapeHtml(x.tema||'')}</td><td>${statusPill(x.estadoProblematica)}</td><td>${publicationPill(x.estadoPublicacion)}</td><td>${formatDateTime(x.updatedAt)}</td><td><div class="row-actions"><button data-edit-problematica="${x.id}">Editar</button><button data-delete-problematica="${x.id}">Eliminar</button></div></td></tr>`));
+  renderConsultas();
+}
+function renderConsultas(){
+  const container=$('#lista-admin-consultas');container.innerHTML='';$('#sin-admin-consultas').hidden=state.consultas.length>0;
+  state.consultas.forEach(x=>{const p=state.problematicas.find(a=>a.id===x.problematicaId)||{};container.insertAdjacentHTML('beforeend',`<article class="admin-record-card"><header><div><span class="code-label">${escapeHtml(x.codigo||'')} · ${escapeHtml(p.codigo||'')}</span><h3>${escapeHtml(x.nombrePublico||'Ciudadanía')}</h3></div>${publicationPill(x.estadoPublicacion)}</header><p>${escapeHtml(x.aporte||'')}</p><div class="admin-record-meta"><span>${escapeHtml(x.tipoAporte||'')}</span><span>${escapeHtml(p.titulo||'Problemática')}</span><span>${formatDateTime(x.createdAt)}</span></div><div class="admin-record-actions">${x.estadoPublicacion!=='publicado'?`<button class="primary-action" data-publish-consulta="${x.id}">Publicar</button>`:''}<button data-reject-consulta="${x.id}">No publicar</button><button data-delete-consulta="${x.id}">Eliminar</button></div></article>`)});
+}
+function problematicForm(item={}){
+  const year=item.vigencia||2026;return `<form class="admin-form" id="form-problematica"><input type="hidden" id="problem-id" value="${escapeHtml(item.id||'')}"><fieldset class="form-section"><legend>Identificación pública</legend><div class="admin-form-grid"><div class="field"><label for="problem-codigo">Código</label><input id="problem-codigo" value="${escapeHtml(item.codigo||generateCode('PROB',year))}" required maxlength="30"></div><div class="field"><label for="problem-vigencia">Vigencia</label><input id="problem-vigencia" type="number" min="2020" max="2100" value="${year}" required></div><div class="field full"><label for="problem-titulo">Título de la problemática</label><input id="problem-titulo" value="${escapeHtml(item.titulo||'')}" maxlength="180" required></div><div class="field"><label for="problem-tema">Tema</label><input id="problem-tema" value="${escapeHtml(item.tema||'')}" maxlength="100" required></div><div class="field"><label for="problem-territorio">Territorio</label><input id="problem-territorio" value="${escapeHtml(item.territorio||'San Pedro, Valle del Cauca')}" maxlength="140" required></div><div class="field full"><label for="problem-pregunta">Pregunta orientadora</label><input id="problem-pregunta" value="${escapeHtml(item.preguntaOrientadora||'')}" maxlength="250" required placeholder="¿Cómo podríamos...? "></div><div class="field full"><label for="problem-resumen">Resumen en lenguaje claro</label><textarea id="problem-resumen" maxlength="1400" required>${escapeHtml(item.resumen||'')}</textarea></div></div></fieldset><fieldset class="form-section"><legend>Información para la consulta</legend><div class="admin-form-grid"><div class="field full"><label for="problem-antecedentes">Antecedentes</label><textarea id="problem-antecedentes" maxlength="3000">${escapeHtml(item.antecedentes||'')}</textarea></div><div class="field full"><label for="problem-datos">Datos, cifras o evidencias</label><textarea id="problem-datos" maxlength="3000">${escapeHtml(item.datosClave||'')}</textarea></div><div class="field"><label for="problem-poblacion">Población relacionada</label><input id="problem-poblacion" value="${escapeHtml(item.poblacion||'')}" maxlength="220"></div><div class="field"><label for="problem-dependencia">Dependencia responsable</label><input id="problem-dependencia" value="${escapeHtml(item.dependenciaResponsable||'')}" maxlength="160" required></div><div class="field"><label for="problem-fecha-cierre">Cierre de consulta</label><input id="problem-fecha-cierre" type="date" value="${escapeHtml(item.fechaCierreConsulta||'')}"></div><div class="field"><label for="problem-enlace">Documento de diagnóstico</label><input id="problem-enlace" type="url" value="${escapeHtml(item.enlaceDiagnostico||'')}" maxlength="500" placeholder="https://"></div></div></fieldset><fieldset class="form-section"><legend>Estado y publicación</legend><div class="admin-form-grid"><div class="field"><label for="problem-estado">Estado</label><select id="problem-estado">${optionList(['En consulta','Priorizada','Convertida en reto','Cerrada'],item.estadoProblematica||'En consulta')}</select></div><div class="field"><label for="problem-publicacion">Publicación</label><select id="problem-publicacion">${optionList(['borrador','publicado'],item.estadoPublicacion||'borrador')}</select></div><div class="field"><label for="problem-fecha-publicacion">Fecha de publicación</label><input id="problem-fecha-publicacion" type="date" value="${escapeHtml(item.fechaPublicacion||'')}"></div></div></fieldset>${formFooter(item.id?'Guardar cambios':'Crear problemática')}</form>`}
+async function submitProblem(event){event.preventDefault();if(!event.currentTarget.reportValidity())return;const id=readValue('problem-id');const status=readValue('problem-publicacion');const data={codigo:readValue('problem-codigo'),vigencia:numberValue('problem-vigencia'),titulo:readValue('problem-titulo'),tema:readValue('problem-tema'),territorio:readValue('problem-territorio'),preguntaOrientadora:readValue('problem-pregunta'),resumen:readValue('problem-resumen'),antecedentes:readValue('problem-antecedentes'),datosClave:readValue('problem-datos'),poblacion:readValue('problem-poblacion'),dependenciaResponsable:readValue('problem-dependencia'),fechaCierreConsulta:readValue('problem-fecha-cierre'),enlaceDiagnostico:readValue('problem-enlace'),estadoProblematica:readValue('problem-estado'),estadoPublicacion:status,fechaPublicacion:readValue('problem-fecha-publicacion')||(status==='publicado'?todayBogota():'')};try{await saveRecord('innovacionProblematicas',id,data);toast('Problemática guardada.','success');closeAdminModal();await loadAll()}catch(error){console.error(error);toast('No fue posible guardar la problemática.','error')}}
+function renderRetos(){
+  const search=normalize($('#buscar-admin-reto').value);const phase=$('#filtrar-admin-reto').value;const items=state.retos.filter(x=>(!search||normalize([x.codigo,x.titulo,x.tema,x.territorio].join(' ')).includes(search))&&(!phase||x.estadoReto===phase));const body=$('#tabla-retos');body.innerHTML='';$('#sin-admin-retos').hidden=items.length>0;
+  items.forEach(x=>{const count=state.propuestas.filter(p=>p.retoId===x.id).length;body.insertAdjacentHTML('beforeend',`<tr><td><strong>${escapeHtml(x.codigo||'')}</strong></td><td><span class="table-title">${escapeHtml(x.titulo||'')}</span><span class="table-sub">${escapeHtml(x.tema||'')} · ${escapeHtml(x.territorio||'')}</span></td><td>${statusPill(x.estadoReto)}</td><td><span class="table-sub">Apertura: ${formatDate(x.fechaApertura)}</span><span class="table-sub">Cierre: ${formatDate(x.fechaCierrePropuestas)}</span></td><td><strong>${count}</strong></td><td>${publicationPill(x.estadoPublicacion)}</td><td><div class="row-actions"><button data-edit-reto="${x.id}">Editar</button><button data-duplicate-reto="${x.id}">Duplicar</button><button data-delete-reto="${x.id}">Eliminar</button></div></td></tr>`)});
+}
+function retosProblemOptions(current=''){return `<option value="">Sin problemática asociada</option>`+state.problematicas.map(p=>`<option value="${p.id}" ${p.id===current?'selected':''}>${escapeHtml(p.codigo||'')} · ${escapeHtml(p.titulo||'')}</option>`).join('')}
+function retoForm(item={}){
+  const year=item.vigencia||2026;return `<form class="admin-form" id="form-reto"><input type="hidden" id="reto-id" value="${escapeHtml(item.id||'')}"><fieldset class="form-section"><legend>Identificación del reto</legend><div class="admin-form-grid"><div class="field"><label for="reto-codigo">Código</label><input id="reto-codigo" value="${escapeHtml(item.codigo||generateCode('RET',year))}" maxlength="30" required></div><div class="field"><label for="reto-vigencia">Vigencia</label><input id="reto-vigencia" type="number" min="2020" max="2100" value="${year}" required></div><div class="field full"><label for="reto-problematica">Problemática asociada</label><select id="reto-problematica">${retosProblemOptions(item.problematicaId||'')}</select></div><div class="field full"><label for="reto-titulo">Nombre del reto</label><input id="reto-titulo" value="${escapeHtml(item.titulo||'')}" maxlength="180" required></div><div class="field full"><label for="reto-pregunta">Pregunta del reto</label><input id="reto-pregunta" value="${escapeHtml(item.preguntaReto||'')}" maxlength="280" required placeholder="¿Cómo podríamos...? "></div><div class="field full"><label for="reto-descripcion">Descripción pública</label><textarea id="reto-descripcion" maxlength="1800" required>${escapeHtml(item.descripcion||'')}</textarea></div><div class="field full"><label for="reto-objetivo">Objetivo</label><textarea id="reto-objetivo" maxlength="1200" required>${escapeHtml(item.objetivo||'')}</textarea></div><div class="field"><label for="reto-tema">Tema</label><input id="reto-tema" value="${escapeHtml(item.tema||'')}" maxlength="100" required></div><div class="field"><label for="reto-territorio">Territorio</label><input id="reto-territorio" value="${escapeHtml(item.territorio||'San Pedro, Valle del Cauca')}" maxlength="140" required></div><div class="field"><label for="reto-poblacion">Población objetivo</label><input id="reto-poblacion" value="${escapeHtml(item.poblacionObjetivo||'')}" maxlength="220"></div><div class="field"><label for="reto-modalidad">Modalidad</label><select id="reto-modalidad">${optionList(['Virtual','Presencial','Mixta'],item.modalidad||'Mixta')}</select></div></div></fieldset><fieldset class="form-section"><legend>Convocatoria y evaluación</legend><div class="admin-form-grid"><div class="field full"><label for="reto-participantes">¿Quiénes pueden participar?</label><textarea id="reto-participantes" maxlength="1300" required>${escapeHtml(item.participantesHabilitados||'')}</textarea></div><div class="field full"><label for="reto-requisitos">Requisitos de las propuestas</label><textarea id="reto-requisitos" maxlength="2500" required>${escapeHtml(item.requisitos||'')}</textarea></div><div class="field full"><label for="reto-criterios">Criterios de evaluación</label><textarea id="reto-criterios" maxlength="1600" required placeholder="Pertinencia|25&#10;Impacto|25&#10;Viabilidad técnica|20&#10;Viabilidad económica|15&#10;Innovación|10&#10;Votación ciudadana|5">${escapeHtml(item.criteriosEvaluacion||'')}</textarea><small>Una línea por criterio, usando Nombre|Peso.</small></div><div class="field"><label for="reto-dependencia">Dependencia responsable</label><input id="reto-dependencia" value="${escapeHtml(item.dependenciaResponsable||'')}" maxlength="160" required></div><div class="field"><label for="reto-contacto">Contacto institucional</label><input id="reto-contacto" value="${escapeHtml(item.contacto||'')}" maxlength="180"></div><div class="field"><label for="reto-correo">Correo de contacto</label><input id="reto-correo" type="email" value="${escapeHtml(item.correoContacto||'')}" maxlength="180"></div><div class="field"><label for="reto-bases">Enlace a bases o términos</label><input id="reto-bases" type="url" value="${escapeHtml(item.enlaceBases||'')}" maxlength="500" placeholder="https://"></div></div></fieldset><fieldset class="form-section"><legend>Cronograma y votaciones</legend><div class="admin-form-grid"><div class="field"><label for="reto-apertura">Apertura</label><input id="reto-apertura" type="date" value="${escapeHtml(item.fechaApertura||'')}" required></div><div class="field"><label for="reto-cierre-propuestas">Cierre de propuestas</label><input id="reto-cierre-propuestas" type="date" value="${escapeHtml(item.fechaCierrePropuestas||'')}" required></div><div class="field"><label for="reto-inicio-votacion">Inicio de votación</label><input id="reto-inicio-votacion" type="date" value="${escapeHtml(item.fechaInicioVotacion||'')}"></div><div class="field"><label for="reto-cierre-votacion">Cierre de votación</label><input id="reto-cierre-votacion" type="date" value="${escapeHtml(item.fechaCierreVotacion||'')}"></div><div class="field"><label for="reto-seleccion">Fecha de selección</label><input id="reto-seleccion" type="date" value="${escapeHtml(item.fechaSeleccion||'')}"></div><div class="field"><label for="reto-plan">Publicación del plan</label><input id="reto-plan" type="date" value="${escapeHtml(item.fechaPublicacionPlan||'')}"></div><div class="field"><label for="reto-fin-implementacion">Cierre de implementación</label><input id="reto-fin-implementacion" type="date" value="${escapeHtml(item.fechaCierreImplementacion||'')}"></div><div class="field"><label for="reto-frecuencia">Frecuencia de reportes</label><select id="reto-frecuencia">${optionList(['Semanal','Quincenal','Mensual','Al cierre'],item.frecuenciaReporte||'Semanal')}</select></div></div></fieldset><fieldset class="form-section"><legend>Estado y publicación</legend><div class="admin-form-grid"><div class="field"><label for="reto-estado">Fase actual</label><select id="reto-estado">${optionList(['Próximo','Recibiendo propuestas','En votación','En evaluación','Solución seleccionada','En implementación','Cerrado','Suspendido'],item.estadoReto||'Próximo')}</select></div><div class="field"><label for="reto-publicacion">Publicación</label><select id="reto-publicacion">${optionList(['borrador','publicado'],item.estadoPublicacion||'borrador')}</select></div><div class="field"><label for="reto-fecha-publicacion">Fecha de publicación</label><input id="reto-fecha-publicacion" type="date" value="${escapeHtml(item.fechaPublicacion||'')}"></div><label class="check-line"><input id="reto-destacado" type="checkbox" ${item.destacado?'checked':''}><span>Destacar este reto en la vista pública.</span></label></div></fieldset>${formFooter(item.id?'Guardar cambios':'Crear reto')}</form>`}
+async function submitReto(event){event.preventDefault();if(!event.currentTarget.reportValidity())return;const id=readValue('reto-id');const status=readValue('reto-publicacion');const problemId=readValue('reto-problematica');const problem=state.problematicas.find(x=>x.id===problemId);const data={codigo:readValue('reto-codigo'),vigencia:numberValue('reto-vigencia'),problematicaId:problemId,problematicaCodigo:problem?.codigo||'',titulo:readValue('reto-titulo'),preguntaReto:readValue('reto-pregunta'),descripcion:readValue('reto-descripcion'),objetivo:readValue('reto-objetivo'),tema:readValue('reto-tema'),territorio:readValue('reto-territorio'),poblacionObjetivo:readValue('reto-poblacion'),modalidad:readValue('reto-modalidad'),participantesHabilitados:readValue('reto-participantes'),requisitos:readValue('reto-requisitos'),criteriosEvaluacion:readValue('reto-criterios'),dependenciaResponsable:readValue('reto-dependencia'),contacto:readValue('reto-contacto'),correoContacto:readValue('reto-correo'),enlaceBases:readValue('reto-bases'),fechaApertura:readValue('reto-apertura'),fechaCierrePropuestas:readValue('reto-cierre-propuestas'),fechaInicioVotacion:readValue('reto-inicio-votacion'),fechaCierreVotacion:readValue('reto-cierre-votacion'),fechaSeleccion:readValue('reto-seleccion'),fechaPublicacionPlan:readValue('reto-plan'),fechaCierreImplementacion:readValue('reto-fin-implementacion'),frecuenciaReporte:readValue('reto-frecuencia'),estadoReto:readValue('reto-estado'),estadoPublicacion:status,fechaPublicacion:readValue('reto-fecha-publicacion')||(status==='publicado'?todayBogota():''),destacado:readValue('reto-destacado'),propuestaSeleccionadaId:itemValue(id,'propuestaSeleccionadaId',''),propuestaSeleccionadaCodigo:itemValue(id,'propuestaSeleccionadaCodigo',''),justificacionSeleccion:itemValue(id,'justificacionSeleccion',''),resultadoCriterios:itemValue(id,'resultadoCriterios',''),enlaceActaSeleccion:itemValue(id,'enlaceActaSeleccion','')};try{await saveRecord('innovacionRetos',id,data);if(problemId&&readValue('reto-estado')!=='Próximo')await updateDoc(doc(db,'innovacionProblematicas',problemId),{estadoProblematica:'Convertida en reto',updatedAt:serverTimestamp()});toast('Reto guardado.','success');closeAdminModal();await loadAll()}catch(error){console.error(error);toast('No fue posible guardar el reto.','error')}}
+function itemValue(id,key,fallback){return state.retos.find(x=>x.id===id)?.[key]??fallback}
+function renderPropuestas(){
+  const search=normalize($('#buscar-admin-propuesta').value);const reto=$('#filtrar-propuesta-reto').value;const status=$('#filtrar-propuesta-estado').value;let items=state.propuestas.filter(x=>(!search||normalize([x.codigo,x.titulo,x.autorNombre,x.organizacion,x.territorio].join(' ')).includes(search))&&(!reto||x.retoId===reto));if(status==='pendiente')items=items.filter(x=>x.estadoModeracion==='pendiente');if(status==='publicada')items=items.filter(x=>x.estadoPublicacion==='publicado'&&!x.seleccionada);if(status==='rechazada')items=items.filter(x=>x.estadoModeracion==='rechazada');if(status==='seleccionada')items=items.filter(x=>x.seleccionada);
+  const container=$('#lista-admin-propuestas');container.innerHTML='';$('#sin-admin-propuestas').hidden=items.length>0;items.forEach(x=>{const r=state.retos.find(a=>a.id===x.retoId)||{};container.insertAdjacentHTML('beforeend',`<article class="admin-record-card"><header><div><span class="code-label">${escapeHtml(x.codigo||'')} · ${escapeHtml(r.codigo||'')}</span><h3>${escapeHtml(x.titulo||'')}</h3></div>${x.seleccionada?'<span class="status-pill convertida">Seleccionada</span>':publicationPill(x.estadoPublicacion)}</header><p>${escapeHtml(x.resumen||'')}</p><div class="admin-record-meta"><span>${escapeHtml(x.autorNombre||'')}</span><span>${escapeHtml(x.organizacion||'Sin organización')}</span><span>${Number(x.votosPublicados||0)} votos publicados</span><span>Puntaje ${Number(x.puntajeFinal||0)}</span></div><div class="admin-record-actions"><button data-review-propuesta="${x.id}">Revisar</button>${x.estadoPublicacion!=='publicado'?`<button class="primary-action" data-publish-propuesta="${x.id}">Publicar</button>`:''}<button data-select-propuesta="${x.id}">Documentar selección</button><button data-reject-propuesta="${x.id}">Rechazar</button><button data-delete-propuesta="${x.id}">Eliminar</button></div></article>`)});
+}
+function proposalReview(item){const priv=state.privados.find(x=>x.id===item.id)||{};const reto=state.retos.find(x=>x.id===item.retoId)||{};openAdminModal(item.titulo,item.codigo,`<div class="detail-hero"><span class="code-label">${escapeHtml(reto.codigo||'')} · ${escapeHtml(reto.titulo||'')}</span><h3>${escapeHtml(item.resumen||'')}</h3><p>Autor: <strong>${escapeHtml(item.autorNombre||'')}</strong> · Cuenta: ${escapeHtml(priv.email||'No disponible')}</p></div><div class="detail-grid"><div class="detail-box full"><small>Descripción</small><p>${escapeHtml(item.descripcion||'')}</p></div><div class="detail-box"><small>Beneficiarios</small><p>${escapeHtml(item.beneficiarios||'')}</p></div><div class="detail-box"><small>Impacto</small><p>${escapeHtml(item.impactoEsperado||'')}</p></div><div class="detail-box"><small>Recursos</small><p>${escapeHtml(item.recursos||'')}</p></div><div class="detail-box"><small>Viabilidad</small><p>${escapeHtml(item.viabilidad||'')}</p></div><div class="detail-box full"><small>Innovación</small><p>${escapeHtml(item.innovacion||'')}</p></div></div>${safeUrl(item.enlaceAnexo)?`<p><a class="btn outline" href="${escapeHtml(safeUrl(item.enlaceAnexo))}" target="_blank" rel="noopener">Abrir anexo</a></p>`:''}`)}
+async function quickProposalUpdate(id,data,label){try{await updateDoc(doc(db,'innovacionPropuestas',id),{...data,updatedAt:serverTimestamp()});await audit('update','innovacionPropuestas',id,label);toast(label,'success');await loadAll()}catch(error){console.error(error);toast('No fue posible actualizar la propuesta.','error')}}
+async function quickConsultationUpdate(id,data,label){try{await updateDoc(doc(db,'innovacionConsultas',id),{...data,updatedAt:serverTimestamp()});await audit('update','innovacionConsultas',id,label);toast(label,'success');await loadAll()}catch(error){console.error(error);toast('No fue posible actualizar el aporte.','error')}}
+function selectionForm(item){const reto=state.retos.find(x=>x.id===item.retoId)||{};return `<form class="admin-form" id="form-seleccion"><input type="hidden" id="selection-id" value="${item.id}"><div class="detail-hero"><span class="code-label">${escapeHtml(reto.codigo||'')}</span><h3>${escapeHtml(item.titulo||'')}</h3><p>Documente los criterios aplicados y la justificación de la selección.</p></div><fieldset class="form-section"><legend>Resultado de evaluación</legend><div class="admin-form-grid"><div class="field"><label for="selection-score">Puntaje final sobre 100</label><input id="selection-score" type="number" min="0" max="100" step="0.01" value="${Number(item.puntajeFinal||0)}" required></div><div class="field"><label for="selection-date">Fecha de selección</label><input id="selection-date" type="date" value="${escapeHtml(item.fechaSeleccion||reto.fechaSeleccion||todayBogota())}" required></div><div class="field full"><label for="selection-results">Resultado por criterios</label><textarea id="selection-results" maxlength="2500" required placeholder="Pertinencia: 23/25&#10;Impacto: 24/25...">${escapeHtml(item.resultadoCriterios||'')}</textarea></div><div class="field full"><label for="selection-justification">Justificación de la selección</label><textarea id="selection-justification" maxlength="2500" required>${escapeHtml(item.justificacionSeleccion||'')}</textarea></div><div class="field full"><label for="selection-committee">Comité evaluador</label><textarea id="selection-committee" maxlength="1200">${escapeHtml(item.comiteEvaluador||'')}</textarea></div><div class="field full"><label for="selection-act">Enlace al acta o informe</label><input id="selection-act" type="url" maxlength="500" value="${escapeHtml(item.enlaceActaSeleccion||'')}" placeholder="https://"></div></div></fieldset>${formFooter('Publicar como solución elegida')}</form>`}
+async function submitSelection(event){event.preventDefault();if(!event.currentTarget.reportValidity())return;const id=readValue('selection-id');const proposal=state.propuestas.find(x=>x.id===id);if(!proposal)return;try{const batch=writeBatch(db);state.propuestas.filter(x=>x.retoId===proposal.retoId&&x.id!==id&&x.seleccionada).forEach(x=>batch.update(doc(db,'innovacionPropuestas',x.id),{seleccionada:false,updatedAt:serverTimestamp()}));const data={seleccionada:true,estadoModeracion:'aprobada',estadoPublicacion:'publicado',puntajeFinal:numberValue('selection-score'),fechaSeleccion:readValue('selection-date'),resultadoCriterios:readValue('selection-results'),justificacionSeleccion:readValue('selection-justification'),comiteEvaluador:readValue('selection-committee'),enlaceActaSeleccion:readValue('selection-act'),updatedAt:serverTimestamp()};batch.update(doc(db,'innovacionPropuestas',id),data);batch.update(doc(db,'innovacionRetos',proposal.retoId),{estadoReto:'Solución seleccionada',propuestaSeleccionadaId:id,propuestaSeleccionadaCodigo:proposal.codigo,justificacionSeleccion:data.justificacionSeleccion,resultadoCriterios:data.resultadoCriterios,enlaceActaSeleccion:data.enlaceActaSeleccion,fechaSeleccion:data.fechaSeleccion,updatedAt:serverTimestamp()});await batch.commit();await audit('select','innovacionPropuestas',id,proposal.codigo);toast('Solución seleccionada y publicada.','success');closeAdminModal();await loadAll()}catch(error){console.error(error);toast('No fue posible publicar la selección.','error')}}
+function renderReports(){
+  const body=$('#tabla-reportes');body.innerHTML='';$('#sin-reportes').hidden=state.reportes.length>0;state.reportes.forEach(x=>{const reto=state.retos.find(r=>r.id===x.retoId)||{};body.insertAdjacentHTML('beforeend',`<tr><td><span class="table-title">${escapeHtml(reto.titulo||x.retoCodigo||'')}</span></td><td>${formatDate(x.fechaCorte)}</td><td>${escapeHtml(x.frecuencia||'')}</td><td><strong>${Number(x.totalVotos||0)}</strong></td><td><span class="table-sub">${(x.resultados||[]).map(r=>`${r.propuestaTitulo}: ${r.votos}`).join(' · ')}</span></td><td><div class="row-actions"><button data-delete-report="${x.id}">Eliminar</button></div></td></tr>`)});
+  if(!$('#reporte-fecha').value)$('#reporte-fecha').value=todayBogota();
+}
+async function generateReport(){const retoId=$('#reporte-reto').value;if(!retoId){toast('Seleccione un reto.','error');return}const reto=state.retos.find(x=>x.id===retoId);const proposals=state.propuestas.filter(x=>x.retoId===retoId&&x.estadoPublicacion==='publicado');if(!proposals.length){toast('El reto no tiene propuestas publicadas.','error');return}const votes=state.votos.filter(x=>x.retoId===retoId);const results=proposals.map(p=>({propuestaId:p.id,propuestaCodigo:p.codigo,propuestaTitulo:p.titulo,votos:votes.filter(v=>v.propuestaId===p.id).length}));const total=votes.length;const batch=writeBatch(db);const reportRef=doc(collection(db,'innovacionReportesVotacion'));const report={codigo:generateCode('COR'),vigencia:reto.vigencia||2026,retoId,retoCodigo:reto.codigo||'',fechaCorte:$('#reporte-fecha').value||todayBogota(),frecuencia:$('#reporte-frecuencia').value,totalVotos:total,notaPublica:$('#reporte-nota').value.trim(),resultados,estadoPublicacion:'publicado',fechaPublicacion:todayBogota(),createdAt:serverTimestamp(),updatedAt:serverTimestamp()};batch.set(reportRef,report);results.forEach(r=>batch.update(doc(db,'innovacionPropuestas',r.propuestaId),{votosPublicados:r.votos,porcentajeVotacion:total?Number(((r.votos/total)*100).toFixed(2)):0,updatedAt:serverTimestamp()}));try{await batch.commit();await audit('create','innovacionReportesVotacion',reportRef.id,reto.codigo);toast('Corte de votación generado y publicado.','success');$('#reporte-nota').value='';await loadAll()}catch(error){console.error(error);toast('No fue posible generar el corte.','error')}}
+function renderPlans(){const container=$('#lista-admin-planes');container.innerHTML='';$('#sin-admin-planes').hidden=state.planes.length>0;state.planes.forEach(x=>{const r=state.retos.find(a=>a.id===x.retoId)||{};container.insertAdjacentHTML('beforeend',`<article class="admin-record-card"><header><div><span class="code-label">${escapeHtml(x.codigo||'')} · ${escapeHtml(r.codigo||'')}</span><h3>${escapeHtml(x.titulo||'')}</h3></div>${statusPill(x.estadoPlan)}</header><p>${escapeHtml(x.objetivo||'')}</p><div class="admin-record-meta"><span>${Number(x.porcentajeAvance||0)}% de avance</span><span>${(x.actividades||[]).length} actividades</span><span>${escapeHtml(x.liderResponsable||'')}</span>${publicationPill(x.estadoPublicacion)}</div><div class="admin-record-actions"><button class="primary-action" data-edit-plan="${x.id}">Editar plan</button><button data-delete-plan="${x.id}">Eliminar</button></div></article>`)});}
+function planRetoOptions(current=''){return `<option value="">Seleccione un reto</option>`+state.retos.map(r=>`<option value="${r.id}" ${r.id===current?'selected':''}>${escapeHtml(r.codigo||'')} · ${escapeHtml(r.titulo||'')}</option>`).join('')}
+function activityRow(item={}){return `<div class="dynamic-row"><div class="field"><label>Actividad</label><input data-act="actividad" value="${escapeHtml(item.actividad||'')}" maxlength="220" required></div><div class="field"><label>Responsable</label><input data-act="responsable" value="${escapeHtml(item.responsable||'')}" maxlength="160" required></div><div class="field"><label>Fecha</label><input data-act="fecha" type="date" value="${escapeHtml(item.fecha||'')}" required></div><div class="field"><label>Estado</label><select data-act="estado">${optionList(['Programada','En ejecución','Cumplida','Con alerta','Suspendida'],item.estado||'Programada')}</select></div><button type="button" data-remove-row aria-label="Eliminar actividad">×</button></div>`}
+function planForm(item={}){const activities=Array.isArray(item.actividades)&&item.actividades.length?item.actividades:[{}];return `<form class="admin-form" id="form-plan"><input type="hidden" id="plan-id" value="${escapeHtml(item.id||'')}"><fieldset class="form-section"><legend>Identificación y alcance</legend><div class="admin-form-grid"><div class="field"><label for="plan-codigo">Código</label><input id="plan-codigo" value="${escapeHtml(item.codigo||generateCode('PLAN'))}" maxlength="30" required></div><div class="field"><label for="plan-reto">Reto relacionado</label><select id="plan-reto" required>${planRetoOptions(item.retoId||'')}</select></div><div class="field full"><label for="plan-titulo">Título del plan</label><input id="plan-titulo" value="${escapeHtml(item.titulo||'')}" maxlength="180" required></div><div class="field full"><label for="plan-objetivo">Objetivo</label><textarea id="plan-objetivo" maxlength="1500" required>${escapeHtml(item.objetivo||'')}</textarea></div><div class="field full"><label for="plan-alcance">Alcance</label><textarea id="plan-alcance" maxlength="1800">${escapeHtml(item.alcance||'')}</textarea></div><div class="field"><label for="plan-lider">Líder responsable</label><input id="plan-lider" value="${escapeHtml(item.liderResponsable||'')}" maxlength="160" required></div><div class="field"><label for="plan-aliados">Aliados</label><input id="plan-aliados" value="${escapeHtml(item.aliados||'')}" maxlength="300"></div><div class="field"><label for="plan-inicio">Fecha de inicio</label><input id="plan-inicio" type="date" value="${escapeHtml(item.fechaInicio||'')}" required></div><div class="field"><label for="plan-fin">Fecha final</label><input id="plan-fin" type="date" value="${escapeHtml(item.fechaFin||'')}" required></div><div class="field"><label for="plan-presupuesto">Recursos o presupuesto</label><input id="plan-presupuesto" value="${escapeHtml(item.presupuesto||'')}" maxlength="240"></div><div class="field"><label for="plan-frecuencia">Frecuencia de seguimiento</label><select id="plan-frecuencia">${optionList(['Semanal','Quincenal','Mensual','Trimestral'],item.frecuenciaSeguimiento||'Mensual')}</select></div></div></fieldset><fieldset class="form-section"><legend>Indicadores y seguimiento</legend><div class="admin-form-grid"><div class="field"><label for="plan-indicador">Indicador</label><input id="plan-indicador" value="${escapeHtml(item.indicador||'')}" maxlength="240" required></div><div class="field"><label for="plan-meta">Meta</label><input id="plan-meta" value="${escapeHtml(item.meta||'')}" maxlength="240" required></div><div class="field"><label for="plan-estado">Estado</label><select id="plan-estado">${optionList(['En preparación','Programado','En ejecución','Con alerta','Cumplido','Suspendido'],item.estadoPlan||'En preparación')}</select></div><div class="field"><label for="plan-avance">Avance (%)</label><input id="plan-avance" type="number" min="0" max="100" value="${Number(item.porcentajeAvance||0)}" required></div><div class="field full"><label for="plan-riesgos">Riesgos y medidas de respuesta</label><textarea id="plan-riesgos" maxlength="1800">${escapeHtml(item.riesgos||'')}</textarea></div><div class="field full"><label for="plan-resultados">Resultados actuales</label><textarea id="plan-resultados" maxlength="1800">${escapeHtml(item.resultadosActuales||'')}</textarea></div><div class="field full"><label for="plan-enlace">Enlace al plan o evidencia</label><input id="plan-enlace" type="url" value="${escapeHtml(item.enlacePlan||'')}" maxlength="500" placeholder="https://"></div></div></fieldset><fieldset class="form-section"><legend>Actividades</legend><div class="dynamic-list" id="activity-list">${activities.map(activityRow).join('')}</div><button class="add-row-button" id="add-activity" type="button">+ Agregar actividad</button></fieldset><fieldset class="form-section"><legend>Publicación</legend><div class="admin-form-grid"><div class="field"><label for="plan-publicacion">Estado de publicación</label><select id="plan-publicacion">${optionList(['borrador','publicado'],item.estadoPublicacion||'borrador')}</select></div><div class="field"><label for="plan-fecha-publicacion">Fecha de publicación</label><input id="plan-fecha-publicacion" type="date" value="${escapeHtml(item.fechaPublicacion||'')}"></div></div></fieldset>${formFooter(item.id?'Guardar cambios':'Crear plan')}</form>`}
+function collectActivities(){return $$('.dynamic-row',$('#activity-list')).map(row=>({actividad:$('[data-act="actividad"]',row).value.trim(),responsable:$('[data-act="responsable"]',row).value.trim(),fecha:$('[data-act="fecha"]',row).value,estado:$('[data-act="estado"]',row).value})).filter(x=>x.actividad)}
+async function submitPlan(event){event.preventDefault();if(!event.currentTarget.reportValidity())return;const id=readValue('plan-id');const retoId=readValue('plan-reto');const reto=state.retos.find(x=>x.id===retoId);const status=readValue('plan-publicacion');const data={codigo:readValue('plan-codigo'),vigencia:reto?.vigencia||2026,retoId,retoCodigo:reto?.codigo||'',titulo:readValue('plan-titulo'),objetivo:readValue('plan-objetivo'),alcance:readValue('plan-alcance'),liderResponsable:readValue('plan-lider'),aliados:readValue('plan-aliados'),fechaInicio:readValue('plan-inicio'),fechaFin:readValue('plan-fin'),presupuesto:readValue('plan-presupuesto'),frecuenciaSeguimiento:readValue('plan-frecuencia'),indicador:readValue('plan-indicador'),meta:readValue('plan-meta'),estadoPlan:readValue('plan-estado'),porcentajeAvance:numberValue('plan-avance'),riesgos:readValue('plan-riesgos'),resultadosActuales:readValue('plan-resultados'),enlacePlan:readValue('plan-enlace'),actividades:collectActivities(),estadoPublicacion:status,fechaPublicacion:readValue('plan-fecha-publicacion')||(status==='publicado'?todayBogota():'')};try{await saveRecord('innovacionPlanesTrabajo',id,data);if(retoId&&data.estadoPlan==='En ejecución')await updateDoc(doc(db,'innovacionRetos',retoId),{estadoReto:'En implementación',updatedAt:serverTimestamp()});toast('Plan guardado.','success');closeAdminModal();await loadAll()}catch(error){console.error(error);toast('No fue posible guardar el plan.','error')}}
+function renderPrototypes(){const container=$('#lista-admin-prototipos');container.innerHTML='';$('#sin-admin-prototipos').hidden=state.prototipos.length>0;state.prototipos.forEach(x=>{const r=state.retos.find(a=>a.id===x.retoId)||{};container.insertAdjacentHTML('beforeend',`<article class="admin-record-card"><header><div><span class="code-label">${escapeHtml(x.codigo||'')} · ${escapeHtml(r.codigo||'')}</span><h3>${escapeHtml(x.titulo||'')}</h3></div>${statusPill(x.etapa)}</header><p>${escapeHtml(x.descripcion||'')}</p><div class="admin-record-meta"><span>Versión ${escapeHtml(x.version||'')}</span><span>${escapeHtml(x.tipoPrototipo||'')}</span>${publicationPill(x.estadoPublicacion)}</div><div class="admin-record-actions"><button class="primary-action" data-edit-prototype="${x.id}">Editar</button><button data-delete-prototype="${x.id}">Eliminar</button></div></article>`)});}
+function prototypeForm(item={}){return `<form class="admin-form" id="form-prototipo"><input type="hidden" id="proto-id" value="${escapeHtml(item.id||'')}"><fieldset class="form-section"><legend>Identificación del desarrollo</legend><div class="admin-form-grid"><div class="field"><label for="proto-codigo">Código</label><input id="proto-codigo" value="${escapeHtml(item.codigo||generateCode('PROTO'))}" maxlength="30" required></div><div class="field"><label for="proto-reto">Reto relacionado</label><select id="proto-reto" required>${planRetoOptions(item.retoId||'')}</select></div><div class="field full"><label for="proto-titulo">Nombre del prototipo</label><input id="proto-titulo" value="${escapeHtml(item.titulo||'')}" maxlength="180" required></div><div class="field"><label for="proto-version">Versión</label><input id="proto-version" value="${escapeHtml(item.version||'1.0')}" maxlength="40" required></div><div class="field"><label for="proto-tipo">Tipo</label><select id="proto-tipo">${optionList(['Servicio','Proceso','Herramienta digital','Modelo físico','Pieza pedagógica','Campaña piloto','Otro'],item.tipoPrototipo||'Servicio')}</select></div><div class="field"><label for="proto-etapa">Etapa</label><select id="proto-etapa">${optionList(['Concepto','Diseño','Piloto','Validado','Implementado'],item.etapa||'Concepto')}</select></div><div class="field"><label for="proto-fecha">Fecha</label><input id="proto-fecha" type="date" value="${escapeHtml(item.fechaPrototipo||todayBogota())}" required></div><div class="field full"><label for="proto-descripcion">Descripción</label><textarea id="proto-descripcion" maxlength="1600" required>${escapeHtml(item.descripcion||'')}</textarea></div><div class="field full"><label for="proto-problema">Problema que resuelve</label><textarea id="proto-problema" maxlength="1200">${escapeHtml(item.problemaResuelto||'')}</textarea></div><div class="field full"><label for="proto-equipo">Equipo responsable y participantes</label><textarea id="proto-equipo" maxlength="1200">${escapeHtml(item.equipoResponsable||'')}</textarea></div></div></fieldset><fieldset class="form-section"><legend>Pruebas y aprendizaje</legend><div class="admin-form-grid"><div class="field full"><label for="proto-resultados">Resultados de las pruebas</label><textarea id="proto-resultados" maxlength="1800">${escapeHtml(item.resultadosPruebas||'')}</textarea></div><div class="field full"><label for="proto-observaciones">Observaciones recibidas</label><textarea id="proto-observaciones" maxlength="1800">${escapeHtml(item.observacionesRecibidas||'')}</textarea></div><div class="field full"><label for="proto-ajustes">Ajustes realizados</label><textarea id="proto-ajustes" maxlength="1800">${escapeHtml(item.ajustesRealizados||'')}</textarea></div><div class="field full"><label for="proto-siguiente">Siguiente paso o versión</label><textarea id="proto-siguiente" maxlength="1200">${escapeHtml(item.siguientePaso||'')}</textarea></div></div></fieldset><fieldset class="form-section"><legend>Recursos públicos</legend><div class="admin-form-grid"><div class="field full"><label for="proto-imagen">URL de imagen</label><input id="proto-imagen" type="url" value="${escapeHtml(item.imagenUrl||'')}" maxlength="500" placeholder="https://"></div><div class="field full"><label for="proto-alt">Descripción accesible de la imagen</label><input id="proto-alt" value="${escapeHtml(item.altImagen||'')}" maxlength="220"></div><div class="field"><label for="proto-demo">Demostración</label><input id="proto-demo" type="url" value="${escapeHtml(item.demoUrl||'')}" maxlength="500" placeholder="https://"></div><div class="field"><label for="proto-doc">Documento técnico</label><input id="proto-doc" type="url" value="${escapeHtml(item.documentoTecnicoUrl||'')}" maxlength="500" placeholder="https://"></div><div class="field"><label for="proto-video">Video</label><input id="proto-video" type="url" value="${escapeHtml(item.videoUrl||'')}" maxlength="500" placeholder="https://"></div><div class="field"><label for="proto-publicacion">Publicación</label><select id="proto-publicacion">${optionList(['borrador','publicado'],item.estadoPublicacion||'borrador')}</select></div><div class="field"><label for="proto-fecha-publicacion">Fecha de publicación</label><input id="proto-fecha-publicacion" type="date" value="${escapeHtml(item.fechaPublicacion||'')}"></div></div></fieldset>${formFooter(item.id?'Guardar cambios':'Crear prototipo')}</form>`}
+async function submitPrototype(event){event.preventDefault();if(!event.currentTarget.reportValidity())return;const id=readValue('proto-id');const retoId=readValue('proto-reto');const reto=state.retos.find(x=>x.id===retoId);const status=readValue('proto-publicacion');const data={codigo:readValue('proto-codigo'),vigencia:reto?.vigencia||2026,retoId,retoCodigo:reto?.codigo||'',titulo:readValue('proto-titulo'),version:readValue('proto-version'),tipoPrototipo:readValue('proto-tipo'),etapa:readValue('proto-etapa'),fechaPrototipo:readValue('proto-fecha'),descripcion:readValue('proto-descripcion'),problemaResuelto:readValue('proto-problema'),equipoResponsable:readValue('proto-equipo'),resultadosPruebas:readValue('proto-resultados'),observacionesRecibidas:readValue('proto-observaciones'),ajustesRealizados:readValue('proto-ajustes'),siguientePaso:readValue('proto-siguiente'),imagenUrl:readValue('proto-imagen'),altImagen:readValue('proto-alt'),demoUrl:readValue('proto-demo'),documentoTecnicoUrl:readValue('proto-doc'),videoUrl:readValue('proto-video'),estadoPublicacion:status,fechaPublicacion:readValue('proto-fecha-publicacion')||(status==='publicado'?todayBogota():'')};try{await saveRecord('innovacionPrototipos',id,data);toast('Prototipo guardado.','success');closeAdminModal();await loadAll()}catch(error){console.error(error);toast('No fue posible guardar el prototipo.','error')}}
+function setupEvents(){
+  $('#iniciar-google').addEventListener('click',signInGoogle);$('#cerrar-sesion').addEventListener('click',()=>signOut(auth));$('#actualizar-datos').addEventListener('click',loadAll);$('#sidebar-toggle').addEventListener('click',()=>document.body.classList.toggle('sidebar-open'));
+  $('#instalar-datos-iniciales').addEventListener('click',async()=>{const button=$('#instalar-datos-iniciales');button.disabled=true;button.textContent='Activando…';try{await installInitialData(false);await loadAll()}catch(error){console.error(error);toast('No fue posible activar la información inicial.','error')}finally{button.disabled=false;button.textContent='Activar información inicial'}});
+  $('#exportar-participacion').addEventListener('click',()=>downloadCsv(`resumen-participacion-san-pedro-${todayBogota()}.csv`,['Indicador','Valor'],[['Ideas, preguntas y comentarios',state.aportesPublicos.length],['Aportes a problemáticas',state.consultas.length],['Propuestas de solución',state.propuestas.length],['Votos únicos',state.votos.length],['Inscripciones',state.formularios.length],['Evaluaciones',state.evaluaciones.length],['Satisfacción promedio',evaluationAverage().toFixed(2)],['Recomendaría participar',recommendationRate().toFixed(2)+' %']]));
+  $('#exportar-aportes-publicos').addEventListener('click',()=>downloadCsv(`tablero-ciudadano-${todayBogota()}.csv`,['Código','Nombre','Tipo','Comentario','Respuesta','Fecha'],state.aportesPublicos.map(x=>[x.codigo,x.nombre,x.tipo,x.comentario,x.respuestaInstitucional,formatDateTime(x.createdAt)])));
+  $('#exportar-inscripciones').addEventListener('click',()=>downloadCsv(`inscripciones-participacion-${todayBogota()}.csv`,['Código','Nombres','Apellidos','Correo','Teléfono','Tipo participante','Organización','Territorio','Zona','Actividad','Temas','Modalidad','Propuesta','Estado','Fecha'],state.formularios.map(x=>[x.codigo,x.nombres,x.apellidos,x.correo,x.telefono,x.tipoParticipante,x.organizacion,x.territorio,x.zona,x.actividad,(x.temasInteres||[]).join(' | '),x.modalidad,x.propuesta,x.estado,formatDateTime(x.createdAt)])));
+  $('#exportar-evaluaciones').addEventListener('click',()=>downloadCsv(`evaluaciones-participacion-${todayBogota()}.csv`,['Código','Actividad','Fecha actividad','Mecanismo','Territorio','Tipo participante','Modalidad','Información previa','Acceso','Metodología','Participación','Respuesta','Satisfacción','Recomendaría','Aspectos positivos','Aspectos por mejorar','Seguimiento','Fecha registro'],state.evaluaciones.map(x=>[x.codigo,x.actividad,x.fechaActividad,x.mecanismo,x.territorio,x.tipoParticipante,x.modalidad,x.informacionPrevia,x.facilidadAcceso,x.claridadMetodologia,x.oportunidadParticipar,x.calidadRespuesta,x.satisfaccionGeneral,x.recomendaria?'Sí':'No',x.aspectosPositivos,x.aspectosMejorar,x.compromisoSeguimiento,formatDateTime(x.createdAt)])));
+  $$('[data-admin-view]').forEach(b=>b.addEventListener('click',()=>switchView(b.dataset.adminView)));
+  $('#nueva-problematica').addEventListener('click',()=>openAdminModal('Nueva problemática','Consulta pública',problematicForm()));$('#nuevo-reto').addEventListener('click',()=>openAdminModal('Nuevo reto','Convocatoria',retoForm()));$('#nuevo-plan').addEventListener('click',()=>openAdminModal('Nuevo plan de trabajo','Implementación',planForm()));$('#nuevo-prototipo').addEventListener('click',()=>openAdminModal('Nuevo prototipo','Desarrollo',prototypeForm()));
+  ['#buscar-admin-problematica','#filtrar-admin-problematica'].forEach(s=>$(s).addEventListener(s.includes('buscar')?'input':'change',renderProblematicas));['#buscar-admin-reto','#filtrar-admin-reto'].forEach(s=>$(s).addEventListener(s.includes('buscar')?'input':'change',renderRetos));['#buscar-admin-propuesta','#filtrar-propuesta-reto','#filtrar-propuesta-estado'].forEach(s=>$(s).addEventListener(s.includes('buscar')?'input':'change',renderPropuestas));
+  $('#generar-reporte').addEventListener('click',generateReport);$('#exportar-propuestas-admin').addEventListener('click',()=>downloadCsv(`propuestas-innovacion-${todayBogota()}.csv`,['Código','Reto','Título','Autor','Organización','Territorio','Estado','Publicación','Seleccionada','Puntaje','Votos'],state.propuestas.map(x=>[x.codigo,x.retoCodigo,x.titulo,x.autorNombre,x.organizacion,x.territorio,x.estadoModeracion,x.estadoPublicacion,x.seleccionada?'Sí':'No',x.puntajeFinal,x.votosPublicados])));$('#exportar-votos-admin').addEventListener('click',()=>downloadCsv(`votos-innovacion-${todayBogota()}.csv`,['Reto ID','Propuesta ID','Usuario ID','Fecha'],state.votos.map(x=>[x.retoId,x.propuestaId,x.userId,formatDateTime(x.createdAt)])));
+  $$('[data-close-admin-modal]').forEach(b=>b.addEventListener('click',closeAdminModal));document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modal-admin').hidden)closeAdminModal()});
+  document.addEventListener('click',async event=>{
+    const t=event.target.closest('[data-respond-board],[data-delete-board],[data-edit-problematica],[data-delete-problematica],[data-publish-consulta],[data-reject-consulta],[data-delete-consulta],[data-edit-reto],[data-duplicate-reto],[data-delete-reto],[data-review-propuesta],[data-publish-propuesta],[data-select-propuesta],[data-reject-propuesta],[data-delete-propuesta],[data-delete-report],[data-edit-plan],[data-delete-plan],[data-edit-prototype],[data-delete-prototype],[data-close-admin-modal],[data-remove-row]');if(!t)return;
+    if(t.dataset.closeAdminModal!==undefined){closeAdminModal();return}
+    if(t.dataset.respondBoard){const x=state.aportesPublicos.find(a=>a.id===t.dataset.respondBoard);openAdminModal('Respuesta institucional',x?.codigo||'Tablero ciudadano',boardResponseForm(x))}
+    if(t.dataset.deleteBoard)await removeRecord('participacionAportesPublicos',t.dataset.deleteBoard,'el aporte ciudadano');
+    if(t.dataset.editProblematica){const x=state.problematicas.find(a=>a.id===t.dataset.editProblematica);openAdminModal('Editar problemática',x.codigo,problematicForm(x))}
+    if(t.dataset.deleteProblematica)await removeRecord('innovacionProblematicas',t.dataset.deleteProblematica,'la problemática');
+    if(t.dataset.publishConsulta)await quickConsultationUpdate(t.dataset.publishConsulta,{estadoModeracion:'aprobado',estadoPublicacion:'publicado'},'Aporte publicado.');
+    if(t.dataset.rejectConsulta)await quickConsultationUpdate(t.dataset.rejectConsulta,{estadoModeracion:'rechazado',estadoPublicacion:'rechazado'},'Aporte marcado como no publicable.');
+    if(t.dataset.deleteConsulta)await removeRecord('innovacionConsultas',t.dataset.deleteConsulta,'el aporte ciudadano');
+    if(t.dataset.editReto){const x=state.retos.find(a=>a.id===t.dataset.editReto);openAdminModal('Editar reto',x.codigo,retoForm(x))}
+    if(t.dataset.duplicateReto){const x=state.retos.find(a=>a.id===t.dataset.duplicateReto);openAdminModal('Duplicar reto','Nueva convocatoria',retoForm({...x,id:'',codigo:generateCode('RET',x.vigencia||2026),titulo:`Copia de ${x.titulo}`,estadoPublicacion:'borrador',estadoReto:'Próximo'}))}
+    if(t.dataset.deleteReto)await removeRecord('innovacionRetos',t.dataset.deleteReto,'el reto');
+    if(t.dataset.reviewPropuesta)proposalReview(state.propuestas.find(a=>a.id===t.dataset.reviewPropuesta));
+    if(t.dataset.publishPropuesta)await quickProposalUpdate(t.dataset.publishPropuesta,{estadoModeracion:'aprobada',estadoPublicacion:'publicado'},'Propuesta publicada.');
+    if(t.dataset.rejectPropuesta)await quickProposalUpdate(t.dataset.rejectPropuesta,{estadoModeracion:'rechazada',estadoPublicacion:'rechazado',seleccionada:false},'Propuesta rechazada.');
+    if(t.dataset.selectPropuesta){const x=state.propuestas.find(a=>a.id===t.dataset.selectPropuesta);openAdminModal('Documentar selección',x.codigo,selectionForm(x))}
+    if(t.dataset.deletePropuesta)await removeProposal(t.dataset.deletePropuesta);
+    if(t.dataset.deleteReport)await removeRecord('innovacionReportesVotacion',t.dataset.deleteReport,'el corte de votación');
+    if(t.dataset.editPlan){const x=state.planes.find(a=>a.id===t.dataset.editPlan);openAdminModal('Editar plan',x.codigo,planForm(x))}
+    if(t.dataset.deletePlan)await removeRecord('innovacionPlanesTrabajo',t.dataset.deletePlan,'el plan');
+    if(t.dataset.editPrototype){const x=state.prototipos.find(a=>a.id===t.dataset.editPrototype);openAdminModal('Editar prototipo',x.codigo,prototypeForm(x))}
+    if(t.dataset.deletePrototype)await removeRecord('innovacionPrototipos',t.dataset.deletePrototype,'el prototipo');
+    if(t.dataset.removeRow!==undefined)t.closest('.dynamic-row')?.remove();
+  });
+  document.addEventListener('submit',event=>{if(event.target.id==='form-respuesta-tablero')submitBoardResponse(event);if(event.target.id==='form-problematica')submitProblem(event);if(event.target.id==='form-reto')submitReto(event);if(event.target.id==='form-seleccion')submitSelection(event);if(event.target.id==='form-plan')submitPlan(event);if(event.target.id==='form-prototipo')submitPrototype(event)});
+  document.addEventListener('click',event=>{if(event.target.id==='add-activity'){$('#activity-list').insertAdjacentHTML('beforeend',activityRow())}});
+}
+
+setupEvents();getRedirectResult(auth).catch(()=>{});onAuthStateChanged(auth,async user=>{if(!user){showLogin();return}setLoginStatus('Verificando permisos…','info');if(await isSuperAdmin(user)){showPanel(user)}else{setLoginStatus('La cuenta ingresada no tiene permisos de superadministrador.','error');await signOut(auth);showLogin()}});

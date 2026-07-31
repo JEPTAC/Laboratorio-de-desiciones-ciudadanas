@@ -1,2 +1,1 @@
-<!-- Reemplace la URL por la dirección final de GitHub Pages. -->
-<a href="https://TU-USUARIO.github.io/TU-REPOSITORIO/" target="_blank" rel="noopener" style="display:inline-block;background:#01256A;color:#fff;text-decoration:none;font-family:'Century Gothic',Arial,sans-serif;font-weight:700;padding:12px 18px;border-radius:10px;">Consultar el Laboratorio de Ideas Ciudadanas</a>
+<a href="https://TU-USUARIO.github.io/TU-REPOSITORIO/" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:999px;background:#01256A;color:#fff;text-decoration:none;font-family:'Century Gothic',Arial,sans-serif;font-weight:700;">Conozca los retos de colaboración e innovación</a>

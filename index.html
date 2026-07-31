@@ -2,200 +2,353 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Laboratorio de Ideas Ciudadanas de San Pedro, Valle del Cauca. Consulte aportes, decisiones públicas, fundamentos, compromisos, avances y evidencias.">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="description" content="Laboratorio de colaboración e innovación abierta de la Alcaldía de San Pedro, Valle del Cauca. Consulte problemáticas, retos, propuestas, votaciones, soluciones, planes de trabajo y prototipos.">
   <meta name="theme-color" content="#01256a">
-  <title>Laboratorio de Ideas Ciudadanas | San Pedro, Valle del Cauca</title>
+  <meta name="color-scheme" content="light">
+  <title>San Pedro Innova | Retos de colaboración e innovación abierta</title>
   <link rel="icon" href="assets/img/escudo-san-pedro.jpg" type="image/jpeg">
   <link rel="stylesheet" href="assets/css/estilos.css">
 </head>
 <body>
 <a class="skip-link" href="#contenido">Saltar al contenido principal</a>
-<header class="site-header">
-  <div class="container topbar">
-    <a class="brand" href="index.html" aria-label="Ir al inicio del Laboratorio de Ideas Ciudadanas">
-      <img src="assets/img/escudo-san-pedro.jpg" alt="Escudo del municipio de San Pedro, Valle del Cauca">
-      <span>San Pedro Participa<small>Laboratorio de Ideas Ciudadanas</small></span>
-    </a>
-    <nav class="nav" aria-label="Navegación principal">
-      <a href="#decisiones">Decisiones</a>
-      <a href="#aportes">Aportes</a>
-      <a href="#ruta">Cómo funciona</a>
-      <a href="#marco">Información de referencia</a>
-      <a class="login-link" href="administracion.html">Iniciar sesión</a>
-    </nav>
+<div class="govbar">
+  <div class="container govbar-inner">
+    <a href="https://www.gov.co/" target="_blank" rel="noopener" aria-label="Abrir Portal Único del Estado Colombiano GOV.CO">GOV.CO</a>
+    <span>Portal de colaboración e innovación abierta</span>
   </div>
-  <div class="container hero">
-    <div>
-      <span class="eyebrow">Menú Participa · Seguimiento público</span>
-      <h1>De las ideas ciudadanas a las decisiones públicas</h1>
-      <p>Consulte cómo los aportes de la comunidad son analizados, qué decisiones adopta la Alcaldía, cuáles son sus fundamentos y cómo avanza cada compromiso.</p>
+</div>
+
+<div class="accessibility-bar" aria-label="Opciones de accesibilidad">
+  <div class="container access-inner">
+    <span class="access-label">Accesibilidad</span>
+    <button type="button" data-access="decrease" aria-label="Disminuir tamaño del texto">A−</button>
+    <button type="button" data-access="increase" aria-label="Aumentar tamaño del texto">A+</button>
+    <button type="button" data-access="contrast" aria-pressed="false">Alto contraste</button>
+    <button type="button" data-access="readable" aria-pressed="false">Lectura fácil</button>
+    <button type="button" data-access="reset">Restablecer</button>
+  </div>
+</div>
+
+<header class="site-header" id="inicio">
+  <nav class="main-nav container" aria-label="Navegación principal">
+    <a class="brand" href="#inicio" aria-label="Ir al inicio de San Pedro Innova">
+      <img src="assets/img/escudo-san-pedro.jpg" alt="Escudo del municipio de San Pedro, Valle del Cauca">
+      <span><strong>San Pedro Innova</strong><small>Laboratorio de ideas y retos públicos</small></span>
+    </a>
+    <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><span></span><span></span><span></span><span class="sr-only">Abrir menú</span></button>
+    <div class="nav-links" id="menu-principal">
+      <a href="#problematicas">Problemáticas</a>
+      <a href="#tablero-ciudadano">Tablero ciudadano</a>
+      <a href="#retos">Retos</a>
+      <a href="#soluciones">Soluciones</a>
+      <a href="#implementacion">Implementación</a>
+      <a href="#prototipos">Prototipos</a>
+      <button class="nav-login" id="login-publico" type="button">Participar con Google</button>
+      <a class="nav-admin" href="administracion.html">Administración</a>
+    </div>
+  </nav>
+
+  <div class="hero-bg" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="eyebrow"><i></i> Colaboración e innovación · Menú Participa</span>
+      <h1>Ideas ciudadanas que se convierten en <em>soluciones reales</em></h1>
+      <p>Conozca los problemas públicos priorizados, participe en retos de innovación, presente soluciones, vote y siga la implementación de las propuestas elegidas.</p>
       <div class="hero-actions">
-        <a class="btn primary-light" href="#decisiones">Consultar decisiones</a>
-        <a class="btn ghost-light" href="#aportes">Ver aportes ciudadanos</a>
+        <a class="btn primary" href="#retos">Explorar retos vigentes</a>
+        <a class="btn glass" href="#problematicas">Consultar problemáticas</a>
+      </div>
+      <div class="session-chip" id="session-chip" hidden>
+        <img id="session-photo" alt="" hidden>
+        <span>Sesión iniciada como <strong id="session-name"></strong></span>
+        <button id="logout-publico" type="button">Cerrar sesión</button>
       </div>
     </div>
-    <aside class="hero-card" aria-label="Información que encontrará en el laboratorio">
-      <h2>Información disponible</h2>
-      <ol>
-        <li>Aportes y necesidades planteadas por la ciudadanía.</li>
-        <li>Decisiones adoptadas y nivel de incorporación de los aportes.</li>
-        <li>Fundamentos técnicos, jurídicos y presupuestales.</li>
-        <li>Responsables, plazos, avances, resultados y evidencias.</li>
-        <li>Histórico por vigencia y descarga de datos.</li>
+
+    <aside class="hero-panel" aria-label="Ciclo de innovación abierta">
+      <div class="hero-panel-head"><span>Ciclo completo</span><strong>6 etapas verificables</strong></div>
+      <ol class="cycle-list">
+        <li><span>01</span><div><strong>Consultar</strong><small>Temas y problemáticas públicas</small></div></li>
+        <li><span>02</span><div><strong>Convocar</strong><small>Reto, requisitos y cronograma</small></div></li>
+        <li><span>03</span><div><strong>Proponer y votar</strong><small>Soluciones y cortes de votación</small></div></li>
+        <li><span>04</span><div><strong>Seleccionar</strong><small>Criterios, puntajes y justificación</small></div></li>
+        <li><span>05</span><div><strong>Implementar</strong><small>Plan, responsables y avances</small></div></li>
+        <li><span>06</span><div><strong>Prototipar</strong><small>Desarrollos, pruebas y resultados</small></div></li>
       </ol>
     </aside>
   </div>
 </header>
 
 <main id="contenido">
-  <div class="container kpi-grid" aria-label="Indicadores públicos">
-    <article class="kpi"><strong id="kpi-aportes">—</strong><span>Aportes ciudadanos publicados</span></article>
-    <article class="kpi"><strong id="kpi-decisiones">—</strong><span>Decisiones publicadas</span></article>
-    <article class="kpi"><strong id="kpi-ejecucion">—</strong><span>Decisiones en ejecución</span></article>
-    <article class="kpi"><strong id="kpi-cumplidas">—</strong><span>Decisiones cumplidas</span></article>
-    <article class="kpi"><strong id="kpi-incorporacion">—</strong><span>Aportes incorporados total o parcialmente</span></article>
-  </div>
+  <section class="metrics-wrap" aria-label="Resumen público">
+    <div class="container metrics-grid">
+      <article><span class="metric-icon">◎</span><strong id="kpi-problematicas">0</strong><small>Problemáticas publicadas</small></article>
+      <article><span class="metric-icon">◇</span><strong id="kpi-retos">0</strong><small>Retos vigentes</small></article>
+      <article><span class="metric-icon">✦</span><strong id="kpi-propuestas">0</strong><small>Soluciones publicadas</small></article>
+      <article><span class="metric-icon">✓</span><strong id="kpi-seleccionadas">0</strong><small>Propuestas elegidas</small></article>
+      <article><span class="metric-icon">△</span><strong id="kpi-prototipos">0</strong><small>Prototipos divulgados</small></article>
+    </div>
+  </section>
 
-  <section class="section" id="ruta">
+  <section class="section intro-section" id="como-funciona">
     <div class="container">
-      <div class="section-heading">
-        <div><span class="section-kicker">Ruta de participación</span><h2>Así se transforma una idea en seguimiento público</h2></div>
-        <p>El laboratorio permite reconstruir el proceso completo, desde la expresión ciudadana hasta la decisión institucional y su cumplimiento.</p>
+      <div class="section-head centered">
+        <span class="kicker">Innovación pública abierta</span>
+        <h2>Un proceso transparente de principio a fin</h2>
+        <p>La información se organiza para que cualquier persona pueda comprender el reto, conocer las propuestas, verificar la selección y hacer seguimiento a la solución.</p>
       </div>
-      <div class="route-grid">
-        <article class="route-card"><div class="route-number">1</div><h3>La comunidad participa</h3><p>Se reciben ideas, preguntas, comentarios, necesidades y propuestas en los espacios habilitados.</p></article>
-        <article class="route-card"><div class="route-number">2</div><h3>La entidad analiza</h3><p>Las dependencias revisan la competencia, viabilidad, impacto, recursos y fundamentos aplicables.</p></article>
-        <article class="route-card"><div class="route-number">3</div><h3>Se publica la decisión</h3><p>Se informa qué fue decidido, por qué, cuáles aportes fueron incorporados y quién responde.</p></article>
-        <article class="route-card"><div class="route-number">4</div><h3>Se hace seguimiento</h3><p>El avance se actualiza mediante estado, porcentaje, fecha, resultados y evidencias verificables.</p></article>
-        <article class="route-card"><div class="route-number">5</div><h3>La ciudadanía verifica</h3><p>La comunidad consulta el histórico, descarga los datos y ejerce control social sobre los compromisos.</p></article>
+      <div class="ita-route">
+        <article data-target="#problematicas"><span>a</span><h3>Consulta pública</h3><p>Temas, datos, antecedentes y preguntas orientadoras.</p></article>
+        <article data-target="#retos"><span>b</span><h3>Convocatoria</h3><p>Objetivo, participantes, requisitos, criterios y cronograma.</p></article>
+        <article data-target="#retos"><span>c</span><h3>Retos y votaciones</h3><p>Fase actual, propuestas, votos y reportes periódicos.</p></article>
+        <article data-target="#soluciones"><span>d</span><h3>Propuesta elegida</h3><p>Puntajes, criterios aplicados, acta y justificación.</p></article>
+        <article data-target="#implementacion"><span>e</span><h3>Plan de trabajo</h3><p>Actividades, responsables, fechas, indicadores y semáforo.</p></article>
+        <article data-target="#prototipos"><span>f</span><h3>Desarrollos</h3><p>Prototipos, pruebas, aprendizajes y siguientes versiones.</p></article>
       </div>
     </div>
   </section>
 
-  <section class="section alt" id="decisiones">
+  <section class="section soft-section" id="problematicas">
     <div class="container">
-      <div class="section-heading">
-        <div><span class="section-kicker">Decisiones y seguimiento</span><h2>Tablero público de decisiones</h2></div>
-        <div class="data-actions">
-          <button class="btn secondary" id="descargar-decisiones" type="button" disabled>Descargar CSV</button>
-          <button class="btn secondary" id="imprimir-pagina" type="button">Imprimir</button>
+      <div class="section-head split">
+        <div><span class="kicker">Escuchar antes de diseñar</span><h2>Temas y problemáticas en consulta</h2></div>
+        <p>Explore diagnósticos públicos y comparta información que ayude a comprender mejor cada situación.</p>
+      </div>
+      <div class="filter-shell">
+        <label class="search-box"><span class="sr-only">Buscar problemáticas</span><input id="buscar-problematica" type="search" placeholder="Buscar por tema, territorio o palabra clave"><i aria-hidden="true">⌕</i></label>
+        <select id="filtro-problematica-tema" aria-label="Filtrar problemáticas por tema"><option value="">Todos los temas</option></select>
+        <select id="filtro-problematica-estado" aria-label="Filtrar problemáticas por estado"><option value="">Todos los estados</option><option>En consulta</option><option>Priorizada</option><option>Convertida en reto</option><option>Cerrada</option></select>
+        <button class="btn outline small" id="limpiar-problematicas" type="button">Limpiar</button>
+      </div>
+      <div class="result-line"><span id="conteo-problematicas">Consultando información…</span><button class="text-button" id="descargar-problematicas" type="button" disabled>Descargar CSV</button></div>
+      <div class="cards-grid problem-grid" id="lista-problematicas" aria-live="polite"></div>
+      <div class="empty-state" id="sin-problematicas" hidden><span>⌁</span><strong>No hay problemáticas publicadas</strong><p>La información aparecerá cuando la Alcaldía habilite un tema para consulta.</p></div>
+    </div>
+  </section>
+
+
+  <section class="section citizen-board-section" id="tablero-ciudadano">
+    <div class="container">
+      <div class="section-head split">
+        <div><span class="kicker">Participación abierta</span><h2>Tablero ciudadano de ideas, preguntas y comentarios</h2><p>Comparta una idea, formule una pregunta o deje un comentario. El aporte se publica inmediatamente para promover el diálogo abierto y puede recibir respuesta institucional.</p></div>
+        <div class="board-trust"><span>✓ Sin inicio de sesión</span><span>✓ Publicación visible</span><span>✓ Respuesta institucional</span></div>
+      </div>
+      <div class="citizen-board-layout">
+        <form class="citizen-board-form" id="form-tablero-ciudadano" novalidate>
+          <div class="form-title"><span>✦</span><div><strong>Publicar un aporte</strong><small>Escriba con respeto y evite incluir datos personales sensibles.</small></div></div>
+          <div class="field"><label for="tablero-nombre">Nombre público</label><input id="tablero-nombre" maxlength="80" required placeholder="Nombre o nombre del colectivo"></div>
+          <div class="field"><label for="tablero-tipo">Tipo de aporte</label><select id="tablero-tipo" required><option value="">Seleccione</option><option>Idea</option><option>Pregunta</option><option>Comentario</option></select></div>
+          <div class="field"><label for="tablero-comentario">Aporte</label><textarea id="tablero-comentario" maxlength="1200" required placeholder="¿Qué propone, pregunta o desea comentar?"></textarea><small><span id="tablero-contador">0</span>/1200</small></div>
+          <label class="check-line"><input id="tablero-consentimiento" type="checkbox" required><span>Autorizo la publicación del nombre indicado y del contenido de mi aporte.</span></label>
+          <div class="notice" id="tablero-form-estado" hidden role="alert"></div>
+          <button class="btn primary dark" id="enviar-tablero-ciudadano" type="submit">Publicar aporte</button>
+        </form>
+        <div class="citizen-board-feed">
+          <div class="board-filters"><label class="search-box"><span class="sr-only">Buscar aportes</span><input id="buscar-tablero-ciudadano" type="search" placeholder="Buscar en el tablero"><i aria-hidden="true">⌕</i></label><select id="filtro-tablero-tipo" aria-label="Filtrar por tipo"><option value="">Todos los aportes</option><option>Idea</option><option>Pregunta</option><option>Comentario</option></select><button class="btn outline small" id="limpiar-tablero" type="button">Limpiar</button></div>
+          <div class="result-line"><span id="conteo-tablero-ciudadano">Consultando aportes…</span></div>
+          <div class="citizen-board-list" id="lista-tablero-ciudadano" aria-live="polite"></div>
+          <div class="empty-state compact-empty" id="sin-tablero-ciudadano" hidden><span>✦</span><strong>Sea la primera persona en participar</strong><p>Publique una idea, una pregunta o un comentario para iniciar la conversación.</p></div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <section class="semaforo-panel" aria-labelledby="titulo-semaforo">
-        <div class="semaforo-heading">
-          <div>
-            <span class="section-kicker">Estado general</span>
-            <h3 id="titulo-semaforo">Semáforo de decisiones</h3>
+  <section class="section" id="retos">
+    <div class="container">
+      <div class="section-head split">
+        <div><span class="kicker">Convocatorias abiertas</span><h2>Retos de innovación</h2></div>
+        <p>Cada reto presenta su cronograma, requisitos, criterios y estado de avance. Inicie sesión con Google para enviar una propuesta o votar.</p>
+      </div>
+
+      <div class="phase-filter" role="group" aria-label="Filtrar retos por fase">
+        <button class="active" type="button" data-reto-fase="">Todos <span id="fase-todos">0</span></button>
+        <button type="button" data-reto-fase="Recibiendo propuestas">Recibiendo propuestas <span id="fase-propuestas">0</span></button>
+        <button type="button" data-reto-fase="En votación">En votación <span id="fase-votacion">0</span></button>
+        <button type="button" data-reto-fase="En evaluación">En evaluación <span id="fase-evaluacion">0</span></button>
+        <button type="button" data-reto-fase="En implementación">En implementación <span id="fase-implementacion">0</span></button>
+        <button type="button" data-reto-fase="Cerrado">Histórico <span id="fase-cerrados">0</span></button>
+      </div>
+      <div class="filter-shell compact">
+        <label class="search-box"><span class="sr-only">Buscar retos</span><input id="buscar-reto" type="search" placeholder="Buscar reto, código, tema o territorio"><i aria-hidden="true">⌕</i></label>
+        <select id="filtro-reto-vigencia" aria-label="Filtrar retos por vigencia"><option value="">Todas las vigencias</option></select>
+        <button class="btn outline small" id="limpiar-retos" type="button">Limpiar</button>
+      </div>
+      <div class="result-line"><span id="conteo-retos">Consultando retos…</span><button class="text-button" id="descargar-retos" type="button" disabled>Descargar CSV</button></div>
+      <div class="challenge-grid" id="lista-retos" aria-live="polite"></div>
+      <div class="empty-state" id="sin-retos" hidden><span>◇</span><strong>No hay retos en esta categoría</strong><p>Consulte otra fase o vuelva más adelante.</p></div>
+    </div>
+  </section>
+
+  <section class="section dark-section" id="soluciones">
+    <div class="container">
+      <div class="section-head split light">
+        <div><span class="kicker">Decisiones documentadas</span><h2>Soluciones elegidas</h2></div>
+        <p>Consulte la propuesta seleccionada, los criterios de evaluación, el puntaje obtenido y la justificación institucional.</p>
+      </div>
+      <div class="selected-carousel" id="lista-seleccionadas" aria-live="polite"></div>
+      <div class="empty-state dark-empty" id="sin-seleccionadas" hidden><span>✓</span><strong>Aún no hay soluciones seleccionadas</strong><p>Los resultados aparecerán al finalizar los procesos de evaluación.</p></div>
+    </div>
+  </section>
+
+  <section class="section soft-section" id="implementacion">
+    <div class="container">
+      <div class="section-head split">
+        <div><span class="kicker">Del diseño a la acción</span><h2>Planes de implementación</h2></div>
+        <p>Haga seguimiento a las actividades, responsables, fechas, indicadores y evidencias de cada solución.</p>
+      </div>
+      <div class="implementation-summary" id="resumen-planes">
+        <article><span class="status-dot preparacion"></span><div><strong id="planes-preparacion">0</strong><small>En preparación</small></div></article>
+        <article><span class="status-dot ejecucion"></span><div><strong id="planes-ejecucion">0</strong><small>En ejecución</small></div></article>
+        <article><span class="status-dot riesgo"></span><div><strong id="planes-riesgo">0</strong><small>Con alerta</small></div></article>
+        <article><span class="status-dot cumplido"></span><div><strong id="planes-cumplidos">0</strong><small>Cumplidos</small></div></article>
+      </div>
+      <div class="plans-list" id="lista-planes" aria-live="polite"></div>
+      <div class="empty-state" id="sin-planes" hidden><span>▤</span><strong>No hay planes publicados</strong><p>Los planes se divulgarán cuando exista una solución seleccionada para implementar.</p></div>
+    </div>
+  </section>
+
+  <section class="section" id="prototipos">
+    <div class="container">
+      <div class="section-head split">
+        <div><span class="kicker">Aprender haciendo</span><h2>Desarrollos y prototipos</h2></div>
+        <p>Conozca las pruebas, versiones, resultados, observaciones y ajustes realizados a las soluciones.</p>
+      </div>
+      <div class="prototype-filter" role="group" aria-label="Filtrar prototipos por etapa">
+        <button class="active" type="button" data-prototype-stage="">Todos</button>
+        <button type="button" data-prototype-stage="Concepto">Concepto</button>
+        <button type="button" data-prototype-stage="Diseño">Diseño</button>
+        <button type="button" data-prototype-stage="Piloto">Piloto</button>
+        <button type="button" data-prototype-stage="Validado">Validado</button>
+        <button type="button" data-prototype-stage="Implementado">Implementado</button>
+      </div>
+      <div class="prototype-grid" id="lista-prototipos" aria-live="polite"></div>
+      <div class="empty-state" id="sin-prototipos" hidden><span>△</span><strong>No hay prototipos publicados</strong><p>Los desarrollos se mostrarán con sus resultados y evidencias cuando estén disponibles.</p></div>
+    </div>
+  </section>
+
+  <section class="section archive-section" id="historico">
+    <div class="container archive-grid">
+      <div>
+        <span class="kicker">Memoria institucional</span>
+        <h2>Histórico y datos descargables</h2>
+        <p>Consulte procesos cerrados y descargue información estructurada para análisis, seguimiento y control social.</p>
+      </div>
+      <div class="archive-actions">
+        <button class="download-card" id="descargar-propuestas" type="button" disabled><span>CSV</span><div><strong>Propuestas publicadas</strong><small>Soluciones, estado y votación reportada</small></div></button>
+        <button class="download-card" id="descargar-reportes" type="button" disabled><span>CSV</span><div><strong>Cortes de votación</strong><small>Frecuencia, fecha y resultados oficiales</small></div></button>
+        <button class="download-card" id="imprimir" type="button"><span>PDF</span><div><strong>Imprimir página</strong><small>Utilice la opción guardar como PDF</small></div></button>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section official-sources-section" id="fuentes-oficiales">
+    <div class="container">
+      <div class="section-head split">
+        <div><span class="kicker">Información de contexto</span><h2>Fuentes oficiales de San Pedro</h2><p>Los temas iniciales del laboratorio se construyeron a partir de planes, secciones y servicios publicados por la Alcaldía. Consulte las fuentes para ampliar la información y formular aportes fundamentados.</p></div>
+        <span class="source-count" id="conteo-fuentes-oficiales"></span>
+      </div>
+      <div class="official-source-grid" id="lista-fuentes-oficiales"></div>
+    </div>
+  </section>
+
+  <section class="section reference-section" id="referencia">
+    <div class="container">
+      <details>
+        <summary><span>Información de referencia y alcance del espacio</span><i>+</i></summary>
+        <div class="reference-content">
+          <p>Este laboratorio facilita la colaboración ciudadana para analizar problemas públicos y cocrear soluciones. Las propuestas y votaciones son insumos para la decisión institucional; no sustituyen los procedimientos administrativos, presupuestales, contractuales o jurídicos aplicables.</p>
+          <div class="reference-links">
+            <a href="https://www.sanpedro-valle.gov.co/" target="_blank" rel="noopener">Portal de la Alcaldía</a>
+            <a href="https://www.funcionpublica.gov.co/participa" target="_blank" rel="noopener">Menú Participa</a>
+            <a href="https://www.procuraduria.gov.co/Pages/ita.aspx" target="_blank" rel="noopener">Índice ITA</a>
+            <a href="https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mintic_1519_2020.htm" target="_blank" rel="noopener">Resolución 1519 de 2020</a>
           </div>
-          <p>Seleccione un estado para filtrar el tablero. Cada color está acompañado por su nombre y cantidad de decisiones.</p>
         </div>
-        <div class="semaforo-grid" role="group" aria-label="Filtrar decisiones por estado">
-          <button class="semaforo-item analisis" type="button" data-semaforo-status="En análisis" aria-pressed="false">
-            <span class="semaforo-light" aria-hidden="true"></span>
-            <span class="semaforo-copy"><strong>En análisis</strong><small>La entidad estudia los aportes y su viabilidad.</small></span>
-            <span class="semaforo-count" id="semaforo-analisis">0</span>
-          </button>
-          <button class="semaforo-item adoptada" type="button" data-semaforo-status="Adoptada" aria-pressed="false">
-            <span class="semaforo-light" aria-hidden="true"></span>
-            <span class="semaforo-copy"><strong>Adoptada</strong><small>La decisión fue aprobada y está pendiente de ejecución.</small></span>
-            <span class="semaforo-count" id="semaforo-adoptada">0</span>
-          </button>
-          <button class="semaforo-item ejecucion" type="button" data-semaforo-status="En ejecución" aria-pressed="false">
-            <span class="semaforo-light" aria-hidden="true"></span>
-            <span class="semaforo-copy"><strong>En ejecución</strong><small>Las acciones o compromisos se encuentran en desarrollo.</small></span>
-            <span class="semaforo-count" id="semaforo-ejecucion">0</span>
-          </button>
-          <button class="semaforo-item cumplida" type="button" data-semaforo-status="Cumplida" aria-pressed="false">
-            <span class="semaforo-light" aria-hidden="true"></span>
-            <span class="semaforo-copy"><strong>Cumplida</strong><small>La acción comprometida fue finalizada y cuenta con resultado.</small></span>
-            <span class="semaforo-count" id="semaforo-cumplida">0</span>
-          </button>
-          <button class="semaforo-item no-adoptada" type="button" data-semaforo-status="No adoptada" aria-pressed="false">
-            <span class="semaforo-light" aria-hidden="true"></span>
-            <span class="semaforo-copy"><strong>No adoptada</strong><small>La propuesta no fue acogida y debe publicar su justificación.</small></span>
-            <span class="semaforo-count" id="semaforo-no-adoptada">0</span>
-          </button>
-          <button class="semaforo-item suspendida" type="button" data-semaforo-status="Suspendida" aria-pressed="false">
-            <span class="semaforo-light" aria-hidden="true"></span>
-            <span class="semaforo-copy"><strong>Suspendida</strong><small>El seguimiento está detenido y debe informar la causa.</small></span>
-            <span class="semaforo-count" id="semaforo-suspendida">0</span>
-          </button>
-        </div>
-      </section>
-
-      <section class="panel filter-panel" aria-label="Filtros de decisiones">
-        <div class="field search-field"><label for="buscar-decision">Buscar</label><input id="buscar-decision" type="search" placeholder="Tema, código, decisión, territorio o dependencia"></div>
-        <div class="field"><label for="filtro-vigencia">Vigencia</label><select id="filtro-vigencia"><option value="">Todas</option></select></div>
-        <div class="field"><label for="filtro-estado">Estado</label><select id="filtro-estado"><option value="">Todos</option><option>En análisis</option><option>Adoptada</option><option>En ejecución</option><option>Cumplida</option><option>No adoptada</option><option>Suspendida</option></select></div>
-        <div class="field"><label for="filtro-tema">Tema</label><select id="filtro-tema"><option value="">Todos</option></select></div>
-        <div class="field"><label for="filtro-territorio">Territorio</label><select id="filtro-territorio"><option value="">Todos</option></select></div>
-        <div class="filters-actions"><button class="btn secondary" id="limpiar-filtros" type="button">Limpiar</button></div>
-      </section>
-
-      <div class="results-bar"><p id="conteo-decisiones">Consultando decisiones…</p><p>Seleccione una decisión para conocer sus fundamentos, responsables y evidencias.</p></div>
-      <div class="loading" id="cargando-decisiones">Cargando información pública…</div>
-      <div class="decisions-grid" id="lista-decisiones" aria-live="polite"></div>
-      <div class="empty-state" id="sin-decisiones" hidden><strong>No hay decisiones para mostrar</strong><span>Pruebe cambiando los filtros o consulte nuevamente más adelante.</span></div>
-    </div>
-  </section>
-
-  <section class="section" id="aportes">
-    <div class="container">
-      <div class="section-heading">
-        <div><span class="section-kicker">Participación abierta</span><h2>Banco de aportes ciudadanos</h2></div>
-        <p>Ideas, preguntas y comentarios publicados por la comunidad que pueden servir como insumo para el análisis institucional.</p>
-      </div>
-      <div class="tabs" role="group" aria-label="Filtros de aportes">
-        <button class="tab-button active" type="button" data-tipo-aporte="">Todos</button>
-        <button class="tab-button" type="button" data-tipo-aporte="Idea">Ideas</button>
-        <button class="tab-button" type="button" data-tipo-aporte="Pregunta">Preguntas</button>
-        <button class="tab-button" type="button" data-tipo-aporte="Comentario">Comentarios</button>
-      </div>
-      <div class="loading" id="cargando-aportes">Cargando aportes publicados…</div>
-      <div class="contributions-grid" id="lista-aportes" aria-live="polite"></div>
-      <div class="empty-state" id="sin-aportes" hidden><strong>No hay aportes publicados en esta categoría</strong><span>Los nuevos aportes aparecerán aquí cuando sean registrados.</span></div>
-    </div>
-  </section>
-
-  <section class="section alt" id="marco">
-    <div class="container">
-      <div class="section-heading">
-        <div><span class="section-kicker">Consulta informada</span><h2>Información de referencia</h2></div>
-        <p>Fuentes oficiales relacionadas con transparencia, participación ciudadana, rendición de cuentas y gestión pública.</p>
-      </div>
-      <div class="norm-grid">
-        <article class="norm-card"><h3>Ley 1712 de 2014</h3><p>Transparencia y derecho de acceso a la información pública.</p><a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=56882" target="_blank" rel="noopener">Consultar norma</a></article>
-        <article class="norm-card"><h3>Ley 1757 de 2015</h3><p>Promoción y protección del derecho a la participación democrática.</p><a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=65335" target="_blank" rel="noopener">Consultar norma</a></article>
-        <article class="norm-card"><h3>Resolución 1519 de 2020</h3><p>Estándares de publicación, accesibilidad web, seguridad digital y datos abiertos.</p><a href="https://normograma.mintic.gov.co/mintic/compilacion/docs/resolucion_mintic_1519_2020.htm" target="_blank" rel="noopener">Consultar resolución</a></article>
-        <article class="norm-card"><h3>Menú Participa</h3><p>Orientaciones para vincular a la ciudadanía en el ciclo de la gestión pública.</p><a href="https://www.funcionpublica.gov.co/participa" target="_blank" rel="noopener">Consultar orientación</a></article>
-        <article class="norm-card"><h3>Índice de Transparencia y Acceso a la Información</h3><p>Información oficial sobre la medición ITA y sus instrumentos de cumplimiento.</p><a href="https://www.procuraduria.gov.co/Pages/ita.aspx" target="_blank" rel="noopener">Consultar ITA</a></article>
-        <article class="norm-card"><h3>Modelo Integrado de Planeación y Gestión</h3><p>Marco para promover la participación ciudadana en la planeación, gestión y evaluación pública.</p><a href="https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=83433" target="_blank" rel="noopener">Consultar Decreto 1499 de 2017</a></article>
-      </div>
+      </details>
     </div>
   </section>
 </main>
 
 <footer class="site-footer">
   <div class="container footer-grid">
-    <div><strong>Alcaldía Municipal de San Pedro</strong><p>Laboratorio de Ideas Ciudadanas para consultar aportes, decisiones, compromisos y resultados de la participación.</p></div>
-    <div><strong>Consulta institucional</strong><p><a href="https://www.sanpedro-valle.gov.co/" target="_blank" rel="noopener">Portal municipal</a></p><p><a href="https://www.sanpedro-valle.gov.co/control-ciudadano/control-ciudadano-631934" target="_blank" rel="noopener">Control ciudadano</a></p></div>
-    <div><strong>Accesibilidad</strong><p>Diseño adaptable a dispositivos móviles, navegación por teclado, etiquetas de formulario y descarga de información.</p></div>
+    <div class="footer-brand"><img src="assets/img/escudo-san-pedro.jpg" alt="Escudo de San Pedro"><div><strong>Alcaldía Municipal de San Pedro</strong><p>Laboratorio de colaboración e innovación abierta.</p></div></div>
+    <div><strong>Participación ciudadana</strong><a href="#problematicas">Consultar problemáticas</a><a href="#tablero-ciudadano">Tablero ciudadano</a><a href="#retos">Retos vigentes</a></div>
+    <div><strong>Seguimiento</strong><a href="#soluciones">Soluciones elegidas</a><a href="#implementacion">Planes de trabajo</a><a href="#prototipos">Prototipos</a></div>
+    <div><strong>Contacto institucional</strong><a href="https://www.sanpedro-valle.gov.co/" target="_blank" rel="noopener">www.sanpedro-valle.gov.co</a><span>San Pedro, Valle del Cauca</span></div>
   </div>
-  <div class="container footer-bottom">San Pedro, Valle del Cauca · Información pública para la participación y el control social.</div>
+  <div class="container footer-bottom"><span>Información pública para la colaboración, la innovación y el control social.</span><a href="#inicio">Volver arriba ↑</a></div>
 </footer>
 
-<div class="modal" id="modal-decision" hidden role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
-  <article class="modal-card">
-    <header class="modal-head">
-      <div><span class="code" id="codigo-modal"></span><h2 id="titulo-modal">Detalle de la decisión</h2></div>
-      <button class="icon-button" id="cerrar-modal" type="button" aria-label="Cerrar detalle">×</button>
-    </header>
-    <div class="modal-content" id="contenido-modal"></div>
+<div class="modal" id="modal-detalle" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-backdrop" data-close-modal></div>
+  <article class="modal-card wide">
+    <header class="modal-header"><div><span class="modal-code" id="modal-code"></span><h2 id="modal-title">Detalle</h2></div><button type="button" class="icon-close" data-close-modal aria-label="Cerrar ventana">×</button></header>
+    <div class="modal-body" id="modal-body"></div>
   </article>
 </div>
 
+<div class="modal" id="modal-aporte" hidden role="dialog" aria-modal="true" aria-labelledby="aporte-title">
+  <div class="modal-backdrop" data-close-aporte></div>
+  <article class="modal-card">
+    <header class="modal-header"><div><span class="modal-code">Consulta ciudadana</span><h2 id="aporte-title">Aportar a la problemática</h2></div><button type="button" class="icon-close" data-close-aporte aria-label="Cerrar formulario">×</button></header>
+    <form class="modal-body public-form" id="form-aporte" novalidate>
+      <input type="hidden" id="aporte-problematica-id">
+      <p class="form-context" id="aporte-contexto"></p>
+      <div class="field"><label for="aporte-nombre">Nombre público</label><input id="aporte-nombre" maxlength="80" required autocomplete="name"><small>Será visible si el aporte es publicado.</small></div>
+      <div class="field"><label for="aporte-tipo">Tipo de aporte</label><select id="aporte-tipo" required><option value="">Seleccione</option><option>Información o evidencia</option><option>Causa identificada</option><option>Necesidad prioritaria</option><option>Idea inicial</option><option>Pregunta</option></select></div>
+      <div class="field"><label for="aporte-texto">Aporte</label><textarea id="aporte-texto" maxlength="1500" required placeholder="Describa la información, experiencia o idea que desea compartir"></textarea><small><span id="aporte-contador">0</span>/1500</small></div>
+      <label class="check-line"><input id="aporte-consentimiento" type="checkbox" required><span>Autorizo la publicación de este aporte y acepto el tratamiento de la información conforme a las políticas institucionales.</span></label>
+      <div class="notice" id="aporte-estado" hidden role="alert"></div>
+      <div class="modal-actions"><button class="btn outline" type="button" data-close-aporte>Cancelar</button><button class="btn primary dark" id="enviar-aporte" type="submit">Enviar aporte</button></div>
+    </form>
+  </article>
+</div>
+
+<div class="modal" id="modal-propuesta" hidden role="dialog" aria-modal="true" aria-labelledby="propuesta-title">
+  <div class="modal-backdrop" data-close-propuesta></div>
+  <article class="modal-card wide">
+    <header class="modal-header"><div><span class="modal-code">Solución ciudadana</span><h2 id="propuesta-title">Presentar propuesta</h2></div><button type="button" class="icon-close" data-close-propuesta aria-label="Cerrar formulario">×</button></header>
+    <form class="modal-body public-form" id="form-propuesta" novalidate>
+      <input type="hidden" id="propuesta-reto-id"><input type="hidden" id="propuesta-reto-codigo">
+      <p class="form-context" id="propuesta-contexto"></p>
+      <div class="form-grid two">
+        <div class="field full"><label for="propuesta-titulo">Nombre de la solución</label><input id="propuesta-titulo" maxlength="150" required></div>
+        <div class="field"><label for="propuesta-autor">Nombre público del autor o equipo</label><input id="propuesta-autor" maxlength="120" required autocomplete="name"></div>
+        <div class="field"><label for="propuesta-organizacion">Organización, grupo o colectivo</label><input id="propuesta-organizacion" maxlength="140"></div>
+        <div class="field"><label for="propuesta-territorio">Barrio, vereda o territorio</label><input id="propuesta-territorio" maxlength="120" required></div>
+        <div class="field"><label for="propuesta-tiempo">Tiempo estimado de implementación</label><input id="propuesta-tiempo" maxlength="100" placeholder="Ejemplo: 3 meses"></div>
+        <div class="field full"><label for="propuesta-resumen">Resumen de la solución</label><textarea id="propuesta-resumen" maxlength="800" required></textarea></div>
+        <div class="field full"><label for="propuesta-descripcion">¿Cómo funcionaría?</label><textarea id="propuesta-descripcion" maxlength="2500" required></textarea></div>
+        <div class="field"><label for="propuesta-beneficiarios">Beneficiarios</label><textarea id="propuesta-beneficiarios" maxlength="700" required></textarea></div>
+        <div class="field"><label for="propuesta-impacto">Impacto esperado</label><textarea id="propuesta-impacto" maxlength="700" required></textarea></div>
+        <div class="field"><label for="propuesta-recursos">Recursos necesarios</label><textarea id="propuesta-recursos" maxlength="700"></textarea></div>
+        <div class="field"><label for="propuesta-viabilidad">Razones de viabilidad</label><textarea id="propuesta-viabilidad" maxlength="700"></textarea></div>
+        <div class="field full"><label for="propuesta-innovacion">¿Qué hace diferente o innovadora la propuesta?</label><textarea id="propuesta-innovacion" maxlength="900" required></textarea></div>
+        <div class="field full"><label for="propuesta-enlace">Enlace opcional a documento, video o demostración</label><input id="propuesta-enlace" type="url" maxlength="500" placeholder="https://"></div>
+      </div>
+      <label class="check-line"><input id="propuesta-consentimiento" type="checkbox" required><span>Declaro que la información es veraz y autorizo la publicación de la propuesta, del nombre público y de la organización indicada.</span></label>
+      <div class="notice" id="propuesta-estado" hidden role="alert"></div>
+      <div class="modal-actions"><button class="btn outline" type="button" data-close-propuesta>Cancelar</button><button class="btn primary dark" id="enviar-propuesta" type="submit">Registrar propuesta</button></div>
+    </form>
+  </article>
+</div>
+
+<div class="modal" id="modal-voto" hidden role="dialog" aria-modal="true" aria-labelledby="voto-title">
+  <div class="modal-backdrop" data-close-voto></div>
+  <article class="modal-card small-card">
+    <header class="modal-header"><div><span class="modal-code">Votación ciudadana</span><h2 id="voto-title">Confirmar voto</h2></div><button type="button" class="icon-close" data-close-voto aria-label="Cerrar confirmación">×</button></header>
+    <div class="modal-body">
+      <p>Va a votar por:</p><div class="vote-choice" id="voto-eleccion"></div>
+      <p class="muted">Puede registrar un solo voto por reto. El resultado se reflejará en el siguiente corte oficial de votación.</p>
+      <div class="notice" id="voto-estado" hidden role="alert"></div>
+      <div class="modal-actions"><button class="btn outline" type="button" data-close-voto>Cancelar</button><button class="btn primary dark" id="confirmar-voto" type="button">Confirmar voto</button></div>
+    </div>
+  </article>
+</div>
+
+<div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 <script type="module" src="assets/js/publico.js"></script>
 </body>
 </html>

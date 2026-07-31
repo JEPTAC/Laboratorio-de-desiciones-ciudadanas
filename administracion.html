@@ -2,189 +2,159 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#01256a">
-  <title>Administración | Laboratorio de Ideas Ciudadanas</title>
+  <title>Administración | San Pedro Innova</title>
   <link rel="icon" href="assets/img/escudo-san-pedro.jpg" type="image/jpeg">
   <link rel="stylesheet" href="assets/css/estilos.css">
 </head>
-<body class="admin-body">
-<a class="skip-link" href="#contenido-admin">Saltar al contenido principal</a>
-<header class="admin-header">
-  <div class="container topbar">
-    <a class="brand" href="index.html">
-      <img src="assets/img/escudo-san-pedro.jpg" alt="Escudo del municipio de San Pedro, Valle del Cauca">
-      <span>San Pedro Participa<small>Administración del laboratorio</small></span>
-    </a>
-    <nav class="nav" aria-label="Navegación administrativa"><a href="index.html">Ver sitio público</a></nav>
-  </div>
-  <div class="container admin-hero">
-    <span class="eyebrow">Área restringida</span>
-    <h1>Gestión de decisiones ciudadanas</h1>
-    <p>Registre, publique y actualice las decisiones derivadas de los procesos de participación.</p>
+<body class="admin-page">
+<a class="skip-link" href="#admin-content">Saltar al contenido principal</a>
+<div class="govbar"><div class="container govbar-inner"><a href="https://www.gov.co/" target="_blank" rel="noopener">GOV.CO</a><span>Área administrativa</span></div></div>
+
+<header class="admin-login-header">
+  <div class="container admin-brandbar">
+    <a class="brand" href="index.html"><img src="assets/img/escudo-san-pedro.jpg" alt="Escudo del municipio de San Pedro"><span><strong>San Pedro Innova</strong><small>Administración del laboratorio</small></span></a>
+    <a class="btn outline small" href="index.html">Ver sitio público</a>
   </div>
 </header>
 
-<main id="contenido-admin">
-  <section class="auth-card" id="vista-login">
-    <img src="assets/img/escudo-san-pedro.jpg" alt="Escudo del municipio de San Pedro">
-    <h2>Iniciar sesión</h2>
-    <p>Utilice la cuenta de Google autorizada como superadministrador.</p>
-    <button class="btn google-btn" id="iniciar-google" type="button">
-      <svg class="google-icon" aria-hidden="true" viewBox="0 0 24 24"><path fill="#4285F4" d="M21.35 12.23c0-.73-.07-1.43-.19-2.1H12v3.97h5.24a4.48 4.48 0 0 1-1.94 2.94v2.58h3.14c1.84-1.69 2.91-4.18 2.91-7.39Z"/><path fill="#34A853" d="M12 21.75c2.62 0 4.82-.87 6.43-2.36l-3.14-2.58c-.87.58-1.98.93-3.29.93-2.53 0-4.67-1.71-5.44-4.01H3.31v2.66A9.72 9.72 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.56 13.73A5.84 5.84 0 0 1 6.25 12c0-.6.1-1.18.31-1.73V7.61H3.31A9.73 9.73 0 0 0 2.25 12c0 1.57.38 3.06 1.06 4.39l3.25-2.66Z"/><path fill="#EA4335" d="M12 6.26c1.43 0 2.71.49 3.72 1.45l2.78-2.78A9.33 9.33 0 0 0 12 2.25a9.72 9.72 0 0 0-8.69 5.36l3.25 2.66c.77-2.3 2.91-4.01 5.44-4.01Z"/></svg>
-      Iniciar sesión con Google
-    </button>
-    <div id="estado-login" class="notice info" hidden role="alert"></div>
+<main id="admin-content">
+  <section class="auth-shell" id="vista-login">
+    <div class="auth-visual"><span class="eyebrow"><i></i> Acceso restringido</span><h1>Gestión integral de innovación abierta</h1><p>Administre problemáticas, retos, propuestas, votaciones, selección, planes de trabajo y prototipos desde un solo lugar.</p><div class="auth-checks"><span>✓ Acceso con Google</span><span>✓ Validación de superadministrador</span><span>✓ Registro de auditoría</span></div></div>
+    <div class="auth-card">
+      <img src="assets/img/escudo-san-pedro.jpg" alt="Escudo de San Pedro">
+      <h2>Iniciar sesión</h2>
+      <p>Use la cuenta de Google autorizada para administrar el laboratorio.</p>
+      <button class="btn google-btn" id="iniciar-google" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><path fill="#4285F4" d="M21.35 12.23c0-.73-.07-1.43-.19-2.1H12v3.97h5.24a4.48 4.48 0 0 1-1.94 2.94v2.58h3.14c1.84-1.69 2.91-4.18 2.91-7.39Z"/><path fill="#34A853" d="M12 21.75c2.62 0 4.82-.87 6.43-2.36l-3.14-2.58c-.87.58-1.98.93-3.29.93-2.53 0-4.67-1.71-5.44-4.01H3.31v2.66A9.72 9.72 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.56 13.73A5.84 5.84 0 0 1 6.25 12c0-.6.1-1.18.31-1.73V7.61H3.31A9.73 9.73 0 0 0 2.25 12c0 1.57.38 3.06 1.06 4.39l3.25-2.66Z"/><path fill="#EA4335" d="M12 6.26c1.43 0 2.71.49 3.72 1.45l2.78-2.78A9.33 9.33 0 0 0 12 2.25a9.72 9.72 0 0 0-8.69 5.36l3.25 2.66c.77-2.3 2.91-4.01 5.44-4.01Z"/></svg>Ingresar con Google</button>
+      <div class="notice" id="estado-login" hidden role="alert"></div>
+    </div>
   </section>
 
-  <section class="container admin-main" id="vista-panel" hidden>
-    <div class="admin-toolbar">
-      <div><h2>Panel administrativo</h2><p>Sesión: <strong id="usuario-admin"></strong></p></div>
-      <div class="toolbar-actions">
-        <button class="btn secondary" id="actualizar-panel" type="button">Actualizar</button>
-        <button class="btn secondary" id="exportar-admin" type="button">Exportar CSV</button>
-        <button class="btn danger" id="cerrar-sesion" type="button">Cerrar sesión</button>
+  <section class="admin-app" id="vista-panel" hidden>
+    <aside class="admin-sidebar">
+      <a class="admin-logo" href="index.html"><img src="assets/img/escudo-san-pedro.jpg" alt=""><span><strong>San Pedro Innova</strong><small>Panel administrativo</small></span></a>
+      <nav id="admin-nav" aria-label="Módulos administrativos">
+        <button class="active" type="button" data-admin-view="dashboard"><span>⌂</span>Resumen</button>
+        <button type="button" data-admin-view="participacion"><span>◉</span>Participación central</button>
+        <button type="button" data-admin-view="problematicas"><span>◎</span>Problemáticas</button>
+        <button type="button" data-admin-view="retos"><span>◇</span>Retos</button>
+        <button type="button" data-admin-view="propuestas"><span>✦</span>Propuestas</button>
+        <button type="button" data-admin-view="votaciones"><span>▥</span>Votaciones</button>
+        <button type="button" data-admin-view="planes"><span>▤</span>Planes de trabajo</button>
+        <button type="button" data-admin-view="prototipos"><span>△</span>Prototipos</button>
+      </nav>
+      <div class="admin-user"><div class="avatar" id="admin-avatar">A</div><div><strong id="admin-name">Administrador</strong><small id="admin-email"></small></div><button id="cerrar-sesion" type="button" aria-label="Cerrar sesión">↪</button></div>
+    </aside>
+
+    <div class="admin-workspace">
+      <header class="admin-topbar"><button class="sidebar-toggle" id="sidebar-toggle" type="button" aria-label="Abrir menú">☰</button><div><span id="admin-breadcrumb">Laboratorio</span><h1 id="admin-title">Resumen general</h1></div><div class="admin-top-actions"><button class="btn outline small" id="actualizar-datos" type="button">Actualizar</button><a class="btn primary dark small" href="index.html" target="_blank" rel="noopener">Vista pública</a></div></header>
+
+      <div class="admin-content">
+        <section class="admin-view" id="view-dashboard">
+          <div class="seed-banner">
+            <span class="seed-banner-icon">✦</span>
+            <div><strong>Contenido público inicial de San Pedro</strong><small id="seed-status">La aplicación puede instalar automáticamente problemáticas, retos, alternativas, plan y prototipo inicial sin reemplazar registros existentes.</small></div>
+            <button class="btn primary dark small" id="instalar-datos-iniciales" type="button">Activar información inicial</button>
+          </div>
+          <div class="admin-kpi-grid">
+            <article><span>◎</span><div><strong id="dash-problematicas">0</strong><small>Problemáticas</small></div></article>
+            <article><span>◇</span><div><strong id="dash-retos">0</strong><small>Retos</small></div></article>
+            <article><span>✦</span><div><strong id="dash-propuestas">0</strong><small>Propuestas</small></div></article>
+            <article><span>▥</span><div><strong id="dash-votos">0</strong><small>Votos registrados</small></div></article>
+            <article><span>▤</span><div><strong id="dash-planes">0</strong><small>Planes publicados</small></div></article>
+            <article><span>△</span><div><strong id="dash-prototipos">0</strong><small>Prototipos</small></div></article>
+          </div>
+          <div class="dashboard-grid">
+            <section class="admin-panel"><header><div><h2>Estado del ciclo</h2><p>Distribución de retos por fase.</p></div></header><div class="status-distribution" id="dashboard-fases"></div></section>
+            <section class="admin-panel"><header><div><h2>Actividad reciente</h2><p>Últimos registros actualizados.</p></div></header><div class="recent-list" id="dashboard-recientes"></div></section>
+          </div>
+          <div class="dashboard-grid">
+            <section class="admin-panel"><header><div><h2>Embudo de participación</h2><p>Desde la consulta de problemas hasta la implementación.</p></div></header><div class="funnel-chart" id="dashboard-funnel"></div></section>
+            <section class="admin-panel"><header><div><h2>Participación transversal</h2><p>Información consolidada de los demás canales ciudadanos.</p></div></header><div class="central-kpi-grid compact-central"><article><strong id="dash-aportes-open">0</strong><small>Ideas y comentarios abiertos</small></article><article><strong id="dash-inscripciones">0</strong><small>Inscripciones</small></article><article><strong id="dash-evaluaciones">0</strong><small>Evaluaciones</small></article><article><strong id="dash-satisfaccion">0,0</strong><small>Satisfacción promedio / 5</small></article></div></section>
+          </div>
+          <section class="admin-panel compliance-panel"><header><div><h2>Control de publicación ITA</h2><p>Verifique que el laboratorio tenga evidencia en cada etapa.</p></div></header><div class="compliance-grid" id="dashboard-cumplimiento"></div></section>
+        </section>
+
+
+        <section class="admin-view" id="view-participacion" hidden>
+          <div class="view-toolbar"><div><h2>Participación ciudadana centralizada</h2><p>Indicadores privados y consolidados de aportes, inscripciones, evaluaciones, propuestas y votos.</p></div><div class="toolbar-actions"><button class="btn outline" id="exportar-participacion" type="button">Exportar resumen CSV</button></div></div>
+          <div class="central-kpi-grid">
+            <article><strong id="part-aportes">0</strong><small>Ideas, preguntas y comentarios</small></article>
+            <article><strong id="part-consultas">0</strong><small>Aportes a problemáticas</small></article>
+            <article><strong id="part-propuestas">0</strong><small>Propuestas de solución</small></article>
+            <article><strong id="part-votos">0</strong><small>Votos únicos</small></article>
+            <article><strong id="part-inscripciones">0</strong><small>Inscripciones ciudadanas</small></article>
+            <article><strong id="part-evaluaciones">0</strong><small>Evaluaciones recibidas</small></article>
+            <article><strong id="part-promedio">0,0</strong><small>Satisfacción promedio / 5</small></article>
+            <article><strong id="part-recomendaria">0 %</strong><small>Recomendaría participar</small></article>
+          </div>
+          <div class="participation-admin-grid">
+            <section class="admin-panel"><header><div><h2>Aportes públicos recientes</h2><p>Ideas, preguntas y comentarios visibles en el tablero ciudadano.</p></div><button class="text-button" id="exportar-aportes-publicos" type="button">CSV</button></header><div class="admin-feed" id="admin-aportes-publicos"></div></section>
+            <section class="admin-panel"><header><div><h2>Calidad de la experiencia</h2><p>Distribución de satisfacción general reportada.</p></div><button class="text-button" id="exportar-evaluaciones" type="button">CSV</button></header><div class="rating-distribution" id="admin-distribucion-evaluaciones"></div></section>
+          </div>
+          <div class="participation-admin-grid">
+            <section class="admin-panel"><header><div><h2>Inscripciones recientes</h2><p>Datos privados visibles únicamente para el superadministrador.</p></div><button class="text-button" id="exportar-inscripciones" type="button">CSV</button></header><div class="admin-feed" id="admin-inscripciones"></div></section>
+            <section class="admin-panel"><header><div><h2>Evaluaciones recientes</h2><p>Comentarios y oportunidades de mejora reportadas por la ciudadanía.</p></div></header><div class="admin-feed" id="admin-evaluaciones-recientes"></div></section>
+          </div>
+        </section>
+
+        <section class="admin-view" id="view-problematicas" hidden>
+          <div class="view-toolbar"><div><h2>Problemáticas en consulta</h2><p>Publique temas, antecedentes y preguntas orientadoras.</p></div><button class="btn primary dark" id="nueva-problematica" type="button">Nueva problemática</button></div>
+          <div class="admin-filter"><input id="buscar-admin-problematica" type="search" placeholder="Buscar problemática"><select id="filtrar-admin-problematica"><option value="">Todos los estados</option><option>En consulta</option><option>Priorizada</option><option>Convertida en reto</option><option>Cerrada</option></select></div>
+          <div class="admin-table-card"><div class="table-scroll"><table><thead><tr><th>Código</th><th>Problemática</th><th>Tema</th><th>Estado</th><th>Publicación</th><th>Actualización</th><th>Acciones</th></tr></thead><tbody id="tabla-problematicas"></tbody></table></div><div class="empty-state compact-empty" id="sin-admin-problematicas" hidden><strong>No hay problemáticas registradas</strong></div></div>
+          <div class="view-toolbar secondary-toolbar"><div><h2>Aportes recibidos</h2><p>Modere la información enviada por la ciudadanía antes de publicarla.</p></div></div>
+          <div class="proposal-admin-grid" id="lista-admin-consultas"></div><div class="empty-state compact-empty" id="sin-admin-consultas" hidden><strong>No hay aportes a problemáticas</strong></div>
+        </section>
+
+        <section class="admin-view" id="view-retos" hidden>
+          <div class="view-toolbar"><div><h2>Convocatorias y retos</h2><p>Configure el ciclo completo, cronograma y criterios de evaluación.</p></div><button class="btn primary dark" id="nuevo-reto" type="button">Nuevo reto</button></div>
+          <div class="admin-filter"><input id="buscar-admin-reto" type="search" placeholder="Buscar reto"><select id="filtrar-admin-reto"><option value="">Todas las fases</option><option>Próximo</option><option>Recibiendo propuestas</option><option>En votación</option><option>En evaluación</option><option>Solución seleccionada</option><option>En implementación</option><option>Cerrado</option><option>Suspendido</option></select></div>
+          <div class="admin-table-card"><div class="table-scroll"><table><thead><tr><th>Código</th><th>Reto</th><th>Fase</th><th>Cronograma</th><th>Propuestas</th><th>Publicación</th><th>Acciones</th></tr></thead><tbody id="tabla-retos"></tbody></table></div><div class="empty-state compact-empty" id="sin-admin-retos" hidden><strong>No hay retos registrados</strong></div></div>
+        </section>
+
+        <section class="admin-view" id="view-propuestas" hidden>
+          <div class="view-toolbar"><div><h2>Propuestas ciudadanas</h2><p>Revise, publique y documente la selección de soluciones.</p></div><button class="btn outline" id="exportar-propuestas-admin" type="button">Exportar CSV</button></div>
+          <div class="admin-filter"><input id="buscar-admin-propuesta" type="search" placeholder="Buscar propuesta o autor"><select id="filtrar-propuesta-reto"><option value="">Todos los retos</option></select><select id="filtrar-propuesta-estado"><option value="">Todos los estados</option><option value="pendiente">Pendientes</option><option value="publicada">Publicadas</option><option value="rechazada">Rechazadas</option><option value="seleccionada">Seleccionadas</option></select></div>
+          <div class="proposal-admin-grid" id="lista-admin-propuestas"></div><div class="empty-state compact-empty" id="sin-admin-propuestas" hidden><strong>No hay propuestas para mostrar</strong></div>
+        </section>
+
+        <section class="admin-view" id="view-votaciones" hidden>
+          <div class="view-toolbar"><div><h2>Cortes oficiales de votación</h2><p>Genere reportes periódicos y publique resultados acumulados.</p></div><button class="btn outline" id="exportar-votos-admin" type="button">Exportar votos</button></div>
+          <div class="vote-report-builder admin-panel">
+            <div class="field"><label for="reporte-reto">Reto</label><select id="reporte-reto"><option value="">Seleccione un reto</option></select></div>
+            <div class="field"><label for="reporte-frecuencia">Frecuencia informada</label><select id="reporte-frecuencia"><option>Semanal</option><option>Quincenal</option><option>Mensual</option><option>Al cierre</option></select></div>
+            <div class="field"><label for="reporte-fecha">Fecha del corte</label><input id="reporte-fecha" type="date"></div>
+            <div class="field grow"><label for="reporte-nota">Nota pública</label><input id="reporte-nota" maxlength="240" placeholder="Resumen opcional del corte"></div>
+            <button class="btn primary dark" id="generar-reporte" type="button">Generar y publicar corte</button>
+          </div>
+          <div class="admin-table-card"><div class="table-scroll"><table><thead><tr><th>Reto</th><th>Fecha</th><th>Frecuencia</th><th>Total votos</th><th>Resultados</th><th>Acciones</th></tr></thead><tbody id="tabla-reportes"></tbody></table></div><div class="empty-state compact-empty" id="sin-reportes" hidden><strong>No hay cortes de votación publicados</strong></div></div>
+        </section>
+
+        <section class="admin-view" id="view-planes" hidden>
+          <div class="view-toolbar"><div><h2>Planes de implementación</h2><p>Organice actividades, responsables, metas y seguimiento.</p></div><button class="btn primary dark" id="nuevo-plan" type="button">Nuevo plan</button></div>
+          <div class="plans-admin-list" id="lista-admin-planes"></div><div class="empty-state compact-empty" id="sin-admin-planes" hidden><strong>No hay planes registrados</strong></div>
+        </section>
+
+        <section class="admin-view" id="view-prototipos" hidden>
+          <div class="view-toolbar"><div><h2>Desarrollos y prototipos</h2><p>Divulgue versiones, pruebas, resultados y ajustes.</p></div><button class="btn primary dark" id="nuevo-prototipo" type="button">Nuevo prototipo</button></div>
+          <div class="prototype-admin-grid" id="lista-admin-prototipos"></div><div class="empty-state compact-empty" id="sin-admin-prototipos" hidden><strong>No hay prototipos registrados</strong></div>
+        </section>
       </div>
     </div>
-
-    <nav class="admin-nav" aria-label="Secciones del panel">
-      <button class="active" type="button" data-vista="resumen">Decisiones</button>
-      <button type="button" data-vista="formulario">Nueva decisión</button>
-      <button type="button" data-vista="aportes">Aportes ciudadanos</button>
-    </nav>
-
-    <section id="vista-resumen">
-      <div class="admin-kpis">
-        <article class="admin-kpi"><strong id="admin-total">0</strong><span>Total de registros</span></article>
-        <article class="admin-kpi"><strong id="admin-publicadas">0</strong><span>Publicadas</span></article>
-        <article class="admin-kpi"><strong id="admin-ejecucion">0</strong><span>En ejecución</span></article>
-        <article class="admin-kpi"><strong id="admin-cumplidas">0</strong><span>Cumplidas</span></article>
-        <article class="admin-kpi"><strong id="admin-promedio">0%</strong><span>Avance promedio</span></article>
-      </div>
-
-      <section class="panel filter-panel" aria-label="Filtros administrativos">
-        <div class="field search-field"><label for="admin-buscar">Buscar</label><input id="admin-buscar" type="search" placeholder="Código, título, dependencia o territorio"></div>
-        <div class="field"><label for="admin-filtro-estado">Estado</label><select id="admin-filtro-estado"><option value="">Todos</option><option>En análisis</option><option>Adoptada</option><option>En ejecución</option><option>Cumplida</option><option>No adoptada</option><option>Suspendida</option></select></div>
-        <div class="field"><label for="admin-filtro-publicacion">Publicación</label><select id="admin-filtro-publicacion"><option value="">Todas</option><option value="publicado">Publicadas</option><option value="borrador">Borradores</option></select></div>
-        <div class="field"><label for="admin-filtro-vigencia">Vigencia</label><select id="admin-filtro-vigencia"><option value="">Todas</option></select></div>
-        <div class="filters-actions"><button class="btn secondary" id="admin-limpiar" type="button">Limpiar</button></div>
-      </section>
-
-      <section class="table-card">
-        <header class="table-head"><div><h3>Listado de decisiones</h3><p id="admin-conteo">Consultando registros…</p></div><button class="btn success" id="crear-decision" type="button">Nueva decisión</button></header>
-        <div class="table-scroll">
-          <table class="data-table">
-            <thead><tr><th>Código</th><th>Decisión</th><th>Estado</th><th>Avance</th><th>Publicación</th><th>Completitud</th><th>Actualización</th><th>Acciones</th></tr></thead>
-            <tbody id="tabla-decisiones"></tbody>
-          </table>
-        </div>
-        <div class="loading" id="admin-cargando">Cargando decisiones…</div>
-        <div class="empty-state" id="admin-sin-registros" hidden><strong>No hay registros</strong><span>Cree la primera decisión para comenzar el tablero público.</span></div>
-      </section>
-    </section>
-
-    <section id="vista-formulario" hidden>
-      <form class="admin-form" id="form-decision" novalidate>
-        <input type="hidden" id="documento-id">
-        <fieldset class="form-section">
-          <legend>Identificación de la decisión</legend>
-          <div class="form-grid">
-            <div class="field"><label for="codigo">Código</label><input id="codigo" maxlength="30" required placeholder="Se genera automáticamente"></div>
-            <div class="field"><label for="vigencia">Vigencia</label><input id="vigencia" type="number" min="2020" max="2100" required value="2026"></div>
-            <div class="field"><label for="tipoRegistro">Tipo de registro</label><select id="tipoRegistro" required><option>Decisión</option><option>Política</option><option>Compromiso</option><option>Medida administrativa</option></select></div>
-            <div class="field"><label for="fechaDecision">Fecha de decisión</label><input id="fechaDecision" type="date" required></div>
-            <div class="field full"><label for="titulo">Título público</label><input id="titulo" maxlength="180" required placeholder="Ejemplo: Mejoramiento del alumbrado público en el barrio..."></div>
-            <div class="field"><label for="tema">Tema</label><input id="tema" list="temas-sugeridos" maxlength="100" required placeholder="Infraestructura, salud, ambiente..."></div>
-            <div class="field"><label for="territorio">Territorio</label><input id="territorio" maxlength="140" required placeholder="Municipio, barrio, vereda o corregimiento"></div>
-            <div class="field full"><label for="poblacionBeneficiaria">Población beneficiaria o afectada</label><input id="poblacionBeneficiaria" maxlength="220" placeholder="Comunidad o grupo poblacional relacionado"></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-section">
-          <legend>Proceso participativo y aportes ciudadanos</legend>
-          <div class="form-grid">
-            <div class="field"><label for="tipoProceso">Mecanismo o espacio</label><select id="tipoProceso" required><option>Mesa de participación</option><option>Rendición de cuentas</option><option>Audiencia pública</option><option>Consulta ciudadana</option><option>Taller comunitario</option><option>Cabildo abierto</option><option>Veeduría ciudadana</option><option>Otro</option></select></div>
-            <div class="field"><label for="fechaProceso">Fecha del proceso</label><input id="fechaProceso" type="date"></div>
-            <div class="field full"><label for="procesoParticipativo">Nombre del proceso o actividad</label><input id="procesoParticipativo" maxlength="180" required placeholder="Nombre de la mesa, audiencia, consulta o encuentro"></div>
-            <div class="field"><label for="numeroParticipantes">Número de participantes</label><input id="numeroParticipantes" type="number" min="0" max="100000" value="0"></div>
-            <div class="field"><label for="numeroAportes">Número de aportes recibidos</label><input id="numeroAportes" type="number" min="0" max="100000" value="0"></div>
-            <div class="field"><label for="frecuenciaParticipacion">Frecuencia de participación</label><select id="frecuenciaParticipacion" required><option>Única</option><option>Semanal</option><option>Mensual</option><option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option><option>Permanente</option><option>Según cronograma</option></select></div>
-            <div class="field"><label for="nivelIncorporacion">Incorporación de aportes</label><select id="nivelIncorporacion" required><option>En análisis</option><option>Incorporación total</option><option>Incorporación parcial</option><option>No incorporados</option><option>No aplica</option></select></div>
-            <div class="field full"><label for="canalesParticipacion">Canales utilizados para participar</label><input id="canalesParticipacion" maxlength="500" placeholder="Ejemplo: formulario web, mesa presencial, correo institucional"></div>
-            <div class="field full"><label for="codigosAportes">Códigos de aportes relacionados</label><input id="codigosAportes" maxlength="800" placeholder="Ejemplo: AP-2026-AB12CD34, AP-2026-EF56GH78"></div>
-            <div class="field full"><label for="resumenProblema">Problema, necesidad o asunto analizado</label><textarea id="resumenProblema" maxlength="2500" required></textarea></div>
-            <div class="field full"><label for="sintesisAportes">Síntesis de los aportes recibidos</label><textarea id="sintesisAportes" maxlength="3500" required></textarea></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-section">
-          <legend>Decisión y fundamentos</legend>
-          <div class="form-grid">
-            <div class="field full"><label for="decision">Decisión adoptada</label><textarea id="decision" maxlength="4000" required></textarea></div>
-            <div class="field full"><label for="fundamentoTecnico">Fundamento técnico</label><textarea id="fundamentoTecnico" maxlength="3000" required></textarea></div>
-            <div class="field full"><label for="fundamentoJuridico">Fundamento jurídico o normativo</label><textarea id="fundamentoJuridico" maxlength="3000" required></textarea></div>
-            <div class="field full"><label for="fundamentoPresupuestal">Fundamento presupuestal</label><textarea id="fundamentoPresupuestal" maxlength="2500" required></textarea></div>
-            <div class="field full"><label for="interpretacionAutorizada">Interpretación, alcance o criterio autorizado</label><textarea id="interpretacionAutorizada" maxlength="2500" placeholder="Explique el alcance de la decisión y las condiciones aplicables"></textarea></div>
-            <div class="field full"><label for="justificacionNoAdopcion">Justificación de no incorporación o no adopción</label><textarea id="justificacionNoAdopcion" maxlength="2500" placeholder="Diligencie cuando los aportes no sean incorporados total o parcialmente"></textarea></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-section">
-          <legend>Responsables, seguimiento y resultados</legend>
-          <div class="form-grid">
-            <div class="field"><label for="dependenciaResponsable">Dependencia responsable</label><input id="dependenciaResponsable" maxlength="160" required></div>
-            <div class="field"><label for="responsableSeguimiento">Responsable del seguimiento</label><input id="responsableSeguimiento" maxlength="160" required></div>
-            <div class="field full"><label for="accionComprometida">Acción o compromiso</label><textarea id="accionComprometida" maxlength="3000" required></textarea></div>
-            <div class="field"><label for="fechaInicio">Fecha de inicio</label><input id="fechaInicio" type="date"></div>
-            <div class="field"><label for="fechaCumplimiento">Fecha prevista de cumplimiento</label><input id="fechaCumplimiento" type="date"></div>
-            <div class="field"><label for="frecuenciaSeguimiento">Frecuencia de seguimiento</label><select id="frecuenciaSeguimiento" required><option>Mensual</option><option>Bimestral</option><option>Trimestral</option><option>Semestral</option><option>Anual</option><option>Única</option><option>Según cronograma</option></select></div>
-            <div class="field"><label for="estadoDecision">Estado</label><select id="estadoDecision" required><option>En análisis</option><option>Adoptada</option><option>En ejecución</option><option>Cumplida</option><option>No adoptada</option><option>Suspendida</option></select></div>
-            <div class="field full"><label for="porcentajeAvance">Avance</label><div class="range-row"><input id="porcentajeAvance" type="range" min="0" max="100" step="1" value="0"><output class="range-value" id="valor-avance">0%</output></div></div>
-            <div class="field"><label for="indicador">Indicador</label><input id="indicador" maxlength="220" required></div>
-            <div class="field"><label for="meta">Meta</label><input id="meta" maxlength="220" required></div>
-            <div class="field full"><label for="resultadoActual">Resultado o avance reportado</label><textarea id="resultadoActual" maxlength="3000" required></textarea></div>
-            <div class="field full"><label for="observacionesSeguimiento">Observaciones de seguimiento</label><textarea id="observacionesSeguimiento" maxlength="2500"></textarea></div>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-section">
-          <legend>Documentos, evidencias y publicación</legend>
-          <div class="form-grid">
-            <div class="field full"><label for="enlaceActa">Enlace al acta o memoria</label><input id="enlaceActa" type="url" maxlength="1000" placeholder="https://..."></div>
-            <div class="field full"><label for="enlaceDecision">Enlace al documento de la decisión</label><input id="enlaceDecision" type="url" maxlength="1000" placeholder="https://..."></div>
-            <div class="field full"><label for="enlaceEvidencia">Enlace principal de evidencia</label><input id="enlaceEvidencia" type="url" maxlength="1000" placeholder="https://..."></div>
-            <div class="field full"><label for="enlacesAdicionales">Enlaces adicionales</label><textarea id="enlacesAdicionales" maxlength="5000" placeholder="Un enlace por línea"></textarea></div>
-            <div class="field"><label for="estadoPublicacion">Estado de publicación</label><select id="estadoPublicacion" required><option value="borrador">Borrador</option><option value="publicado">Publicado</option></select></div>
-            <div class="field"><label for="fechaPublicacion">Fecha de publicación</label><input id="fechaPublicacion" type="date"></div>
-            <div class="field full"><label class="check-row"><input id="destacado" type="checkbox"> Mostrar como decisión destacada</label></div>
-          </div>
-        </fieldset>
-
-        <div id="estado-formulario" class="notice info" hidden role="alert"></div>
-        <div class="form-actions">
-          <button class="btn secondary" id="cancelar-edicion" type="button">Cancelar</button>
-          <button class="btn" id="guardar-borrador" type="button">Guardar borrador</button>
-          <button class="btn success" id="guardar-publicar" type="submit">Guardar decisión</button>
-        </div>
-      </form>
-    </section>
-
-    <section id="vista-aportes" hidden>
-      <div class="section-heading"><div><span class="section-kicker">Banco ciudadano</span><h2>Aportes publicados</h2></div><p>Puede copiar el código de un aporte para relacionarlo con una decisión.</p></div>
-      <div class="panel filter-panel">
-        <div class="field search-field"><label for="buscar-aporte-admin">Buscar aporte</label><input id="buscar-aporte-admin" type="search" placeholder="Código, nombre, tipo o comentario"></div>
-        <div class="field"><label for="tipo-aporte-admin">Tipo</label><select id="tipo-aporte-admin"><option value="">Todos</option><option>Idea</option><option>Pregunta</option><option>Comentario</option></select></div>
-        <div class="filters-actions"><button class="btn secondary" id="limpiar-aportes-admin" type="button">Limpiar</button></div>
-      </div>
-      <div class="loading" id="cargando-aportes-admin">Cargando aportes…</div>
-      <div class="admin-contribution-list" id="lista-aportes-admin"></div>
-      <div class="empty-state" id="sin-aportes-admin" hidden><strong>No hay aportes publicados</strong><span>Los aportes ciudadanos aparecerán en esta sección.</span></div>
-    </section>
   </section>
 </main>
 
-<datalist id="temas-sugeridos"><option>Ambiente</option><option>Cultura</option><option>Deporte</option><option>Educación</option><option>Infraestructura</option><option>Movilidad</option><option>Salud</option><option>Seguridad</option><option>Servicios públicos</option><option>Desarrollo rural</option><option>Inclusión social</option><option>Planeación</option></datalist>
+<div class="modal" id="modal-admin" hidden role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+  <div class="modal-backdrop" data-close-admin-modal></div>
+  <article class="modal-card wide admin-modal-card">
+    <header class="modal-header"><div><span class="modal-code" id="admin-modal-code">Registro</span><h2 id="admin-modal-title">Formulario</h2></div><button type="button" class="icon-close" data-close-admin-modal aria-label="Cerrar formulario">×</button></header>
+    <div class="modal-body" id="admin-modal-body"></div>
+  </article>
+</div>
+
+<div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 <script type="module" src="assets/js/admin.js"></script>
 </body>
 </html>
